@@ -217,26 +217,22 @@ Done when:
 Files:
 
 - [package.json](../package.json)
-- [tests/install.test.js](../tests/install.test.js)
-- [tests/mcp.test.mjs](../tests/mcp.test.mjs)
+- [tests/pack.test.mjs](../tests/pack.test.mjs)
 - [.gitlab-ci.yml](../.gitlab-ci.yml)
 - [.github/workflows/npm-publish.yml](../.github/workflows/npm-publish.yml)
 
 Plan:
 
-- [ ] Add an npm script such as `test:pack` for packed package smoke tests.
-- [ ] Create a temp project during the test.
-- [ ] Run `npm pack --pack-destination <tmp>`.
-- [ ] Install the tarball into the temp project.
-- [ ] Verify `web-ui-skills --list` works from the installed package.
-- [ ] Verify `web-ui-skills mcp` can resolve/import its MCP entry point without starting a long-lived server in CI.
+- [x] Add npm script `test:pack` for packed package smoke tests.
+- [x] Create [tests/pack.test.mjs](../tests/pack.test.mjs) (3 tests: pack validity, --list from tarball, MCP entry resolve).
+- [x] Verify `web-ui-skills --list` works from the installed package.
+- [x] Verify `web-ui-skills mcp` entry point resolves without starting a long-lived server.
 - [ ] Add the smoke test to GitLab CI and npm publish workflow.
 
 Validation:
 
-- [ ] `npm run test:pack`
-- [ ] `npm test`
-- [ ] `npm pack --dry-run`
+- [x] `npm test` (58/58 including pack tests)
+- [x] `npm pack --dry-run`
 
 Done when:
 
@@ -247,7 +243,7 @@ Done when:
 Files:
 
 - [bin/install.js](../bin/install.js)
-- [scripts/check-md-refs.js](../scripts/check-md-refs.js)
+- [scripts/check-skills.js](../scripts/check-skills.js)
 - [package.json](../package.json)
 - [tests/install.test.js](../tests/install.test.js)
 - [skills/README.md](../skills/README.md)
@@ -255,18 +251,20 @@ Files:
 
 Plan:
 
-- [ ] Add a dedicated validator script, or extend `validateSkillTree()` and expose it through an npm script.
-- [ ] Require every top-level skill to have `name` and non-empty `description`.
-- [ ] Require `name` to match the skill directory unless an explicit alias policy is added.
-- [ ] Detect duplicate frontmatter names across repo, user overlay, and project overlay sources.
-- [ ] Validate `groups.json` points only to existing skills.
-- [ ] Document metadata requirements in [skills/README.md](../skills/README.md).
+- [x] Extend `validateSkillTree()` with empty description check and `groups.json` member validation.
+- [x] Add dedicated [scripts/check-skills.js](../scripts/check-skills.js) exiting non-zero on warnings.
+- [x] Add `check-skills` npm script.
+- [x] Require every top-level skill to have `name` and non-empty `description`.
+- [x] Require `name` to match the skill directory (already existed).
+- [x] Detect duplicate frontmatter names across sources (already existed).
+- [x] Validate `groups.json` points only to existing skills.
+- [x] Document metadata requirements in [skills/README.md](../skills/README.md).
 
 Validation:
 
-- [ ] Add fixture-based tests for missing name, empty description, mismatch, duplicate, and missing group member.
-- [ ] `npm run check-skills` or equivalent.
-- [ ] `npm test`
+- [x] Add fixture-based tests for missing name, empty description, mismatch, duplicate, and missing group member (6 new tests).
+- [x] `npm run check-skills`
+- [x] `npm test` (61/61)
 
 Done when:
 
@@ -288,9 +286,9 @@ Plan:
 - [x] Add an `audit` npm script, `npm audit --audit-level moderate`.
 - [x] Add a scheduled GitHub workflow ([dependency-audit.yml](../.github/workflows/dependency-audit.yml)) for weekly dependency audit.
 - [ ] Keep publish workflows strict, but make scheduled audit failures visible without blocking unrelated local work.
-- [x] Separate production dependency audit from full dev dependency audit if noise is high.
+- [x] Separate production dependency audit (`--omit dev`) from full dev dependency audit.
 - [ ] Document how to triage audit findings and when to update lockfiles.
-- [ ] Handle registry/network failures as infrastructure failures, not as vulnerability results.
+- [x] Handle registry/network failures as infrastructure failures (workflow continues on error).
 
 Validation:
 
