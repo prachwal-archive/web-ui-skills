@@ -195,11 +195,11 @@ Files:
 
 Plan:
 
-- [ ] Decide release trigger policy: manual dispatch, tags only, or conventional-commit gated releases.
-- [ ] Stop automatic patch release on every push to `main`.
-- [ ] Keep npm publishing tied to GitHub release or tag validation.
-- [ ] Add pre-release checks before version bump: `npm ci`, `npm test`, `npm run check-md-refs`, `npm pack --dry-run`.
-- [ ] Ensure package version and tag validation remains enforced.
+- [x] Decide release trigger policy: **workflow_dispatch only** (manual from GitHub UI).
+- [x] Remove `release-on-main.yml` — stop automatic patch release on every push to `main`.
+- [x] Keep npm publishing as `workflow_dispatch` only with tag validation.
+- [x] Add pre-release checks: `npm test`, `npm run check-md-refs`, `npm pack --dry-run` before publish.
+- [x] Ensure package version and tag validation remains enforced.
 - [ ] Update release docs in [README.md](../README.md).
 
 Validation:
