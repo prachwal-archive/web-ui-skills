@@ -261,6 +261,8 @@ function syncOverlaySources({
   target = 'project',
   projectRoot = process.cwd(),
   skillsSources = getSkillsSources({ projectRoot }),
+  dryRun = false,
+  overwrite = false,
 } = {}) {
   const sources = normalizeSkillsSources(skillsSources);
   const mergedSkills = getMergedSkillEntries(sources);
@@ -268,6 +270,32 @@ function syncOverlaySources({
   const destinationRoot = target === 'user'
     ? getUserSkillsSource()
     : getProjectSkillsSource(projectRoot);
+
+  const exists = fs.existsSync(destinationRoot);
+  const result = {
+    target,
+    destinationRoot,
+    sourceRoots: sources,
+    skillCount: mergedSkills.length,
+    groupCount: Object.keys(mergedGroups).length,
+    skills: mergedSkills.map((entry) => entry.dir),
+    groups: Object.keys(mergedGroups).sort(),
+    exists,
+  };
+
+  if (exists && !overwrite) {
+    return {
+      ...result,
+      dryRun,
+      overwrite,
+      ok: false,
+      error: `Destination already exists. Set overwrite=true to replace: ${destinationRoot}`,
+    };
+  }
+
+  if (dryRun) {
+    return { ...result, dryRun, overwrite, ok: true };
+  }
 
   const stagingParent = fs.mkdtempSync(path.join(os.tmpdir(), 'web-ui-skills-sync-'));
   const stagingSkillsRoot = path.join(stagingParent, 'skills');
@@ -288,15 +316,7 @@ function syncOverlaySources({
   fs.renameSync(stagingSkillsRoot, destinationRoot);
   fs.rmSync(stagingParent, { recursive: true, force: true });
 
-  return {
-    target,
-    destinationRoot,
-    sourceRoots: sources,
-    skillCount: mergedSkills.length,
-    groupCount: Object.keys(mergedGroups).length,
-    skills: mergedSkills.map((entry) => entry.dir),
-    groups: Object.keys(mergedGroups).sort(),
-  };
+  return { ...result, dryRun, overwrite, ok: true };
 }
 
 function promoteOverlaySkill({

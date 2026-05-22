@@ -392,7 +392,7 @@ function createServer(options = {}) {
             '- Use search_skills to find a skill by folder name or frontmatter name.',
             '- Use list_groups to inspect curated skill bundles before installing.',
             '- Use list_overlays to inspect repo, user, and project sources and precedence.',
-            '- Use sync_overlays to materialize the merged skill view into the user or project overlay directory.',
+            '- Use sync_overlays to materialize the merged skill view into the user or project overlay directory. Pass dryRun=true to preview, overwrite=true to replace an existing destination.',
             '- Use promote_skill to copy one skill from the project overlay into the user overlay.',
             '- Use get_skill_info to inspect one skill, get_group_info to inspect one group with skill metadata, and list_skills_info to inspect all skills.',
             '- Use install_skills to install one or more skills or groups.',
@@ -503,6 +503,8 @@ function createServer(options = {}) {
       inputSchema: z.object({
         target: z.enum(['user', 'project']).optional(),
         projectRoot: z.string().min(1).optional(),
+        dryRun: z.boolean().optional(),
+        overwrite: z.boolean().optional(),
       }),
     },
     async (input = {}) => prunedJsonContent({
@@ -510,6 +512,8 @@ function createServer(options = {}) {
       sync: installer.syncOverlaySources({
         target: input.target || 'project',
         projectRoot: input.projectRoot ?? context.projectRoot ?? process.cwd(),
+        dryRun: input.dryRun ?? false,
+        overwrite: input.overwrite ?? false,
       }),
     }),
   );
