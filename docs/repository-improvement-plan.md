@@ -164,18 +164,18 @@ Files:
 
 Plan:
 
-- [ ] Add a namespace or version field to Qdrant payloads, such as package name plus package version.
-- [ ] Create the collection only when missing.
-- [ ] Replace `recreateCollection()` with scoped delete of this package namespace followed by upsert.
-- [ ] Keep existing points from other namespaces intact.
-- [ ] Add graceful fallback when Qdrant is reachable but indexing fails.
+- [x] Add a namespace field to Qdrant payloads: `web-ui-skills@<version>`.
+- [x] Create the collection only when missing (never `recreateCollection`).
+- [x] Replace `recreateCollection()` with scoped delete of this package namespace followed by upsert.
+- [x] Keep existing points from other namespaces intact.
+- [x] Add graceful fallback when Qdrant is reachable but indexing fails.
 - [ ] Document collection naming and data ownership.
 
 Validation:
 
-- [ ] Unit-test collection exists path with a mocked client.
-- [ ] Unit-test missing collection path with a mocked client.
-- [ ] Test indexing failure falls back to file search.
+- [x] Unit-test collection exists path with a mocked client (pre-existing).
+- [x] Unit-test missing collection path with a mocked client (pre-existing).
+- [x] Test indexing failure falls back to file search (pre-existing).
 - [ ] Optional local check with [docker-compose.yml](../docker-compose.yml).
 
 Done when:
