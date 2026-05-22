@@ -281,7 +281,7 @@ function removeAllSkillsFromTool(toolName, targetDirs) {
 
   for (const entry of dirs) {
     const fullPath = path.join(targetDir, entry);
-    fs.rmSync(fullPath, { recursive: true, force: true });
+    installer.safeRmSync(fullPath, { recursive: true, force: true });
     removed.push(entry);
   }
 
