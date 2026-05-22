@@ -25,6 +25,8 @@ test:skills:
   script:
     - npm run list-skills
     - node bin/install.js --list
+    - npm test
+    - npm run check-md-refs
     - echo "Testing skill installation..."
     - mkdir -p /tmp/test-skills
     - CODEX_HOME=/tmp/test-skills node bin/install.js --codex
@@ -40,9 +42,9 @@ test:docs:
   stage: test
   image: node:${NODE_VERSION}
   before_script:
-    - npm install -g markdownlint-cli
+    - npm ci
   script:
-    - find skills -name "*.md" -exec markdownlint {} \;
+    - npm run lint:md
     - echo "Markdown validation passed"
 
 # Build stage - prepare distribution
@@ -52,7 +54,6 @@ build:package:
   before_script:
     - npm ci
   script:
-    - npm run build 2>/dev/null || echo "No build script, skipping"
     - echo "Package validation..."
     - npm pack --dry-run
   artifacts:
@@ -73,6 +74,9 @@ deploy:npm:
     - npm ci
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
   script:
+    - npm test
+    - npm run check-md-refs
+    - npm pack --dry-run
     - npm publish --tag latest
   only:
     - tags

@@ -1,12 +1,10 @@
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release tag to publish, for example v1.0.5
+        description: 'Release tag to publish, for example v1.0.5'
         required: true
         type: string
 
@@ -15,13 +13,13 @@ permissions:
   id-token: write
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.release.tag_name || github.event.inputs.release_tag || github.ref }}
+          ref: ${{ github.event.inputs.release_tag || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v5
@@ -33,9 +31,8 @@ jobs:
         run: npm install -g npm@11.5.1
 
       - name: Validate package version matches release tag
-        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         run: |
-          TAG="${{ github.event.release.tag_name || github.event.inputs.release_tag }}"
+          TAG="${{ github.event.inputs.release_tag }}"
           VERSION="$(node -p "require('./package.json').version")"
           EXPECTED="v${VERSION}"
           if [ "$TAG" != "$EXPECTED" ]; then
@@ -45,6 +42,12 @@ jobs:
 
       - name: Install
         run: npm ci --ignore-scripts
+
+      - name: Run tests
+        run: npm test
+
+      - name: Check markdown refs
+        run: npm run check-md-refs
 
       - name: Pack check
         run: npm pack --dry-run
