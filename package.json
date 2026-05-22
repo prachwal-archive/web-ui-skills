@@ -22,6 +22,7 @@
     "audit": "npm audit --audit-level moderate",
     "mcp": "node bin/mcp.mjs",
     "test": "node --test",
+    "test:pack": "npm pack --dry-run && node --test --test-name-pattern='packed tarball' tests/pack.test.mjs",
     "check-md-refs": "node scripts/check-md-refs.js .",
     "check-skills": "node scripts/check-skills.js",
     "lint:md": "markdownlint --dot '**/*.md'",
