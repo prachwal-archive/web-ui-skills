@@ -60,18 +60,7 @@ This repository bundles Codex skills for building professional web applications.
 - `web-pwa` - installability, service workers, offline support, background sync, push notifications, and app manifest configuration.
 - `web-security` - frontend security concerns, XSS prevention, safe rendering, CSP, CSRF awareness, token handling, secure storage, and secure links/forms.
 
-### Frontend Product — framework-specific variants
 
-Each generic `web-*` skill has framework-specific variants with implementation patterns for React, Preact, and Vue:
-
-| Concept | react-* | preact-* | vue-* |
-|---|---|---|---|
-| Forms | `react-forms` | `preact-forms` | `vue-forms` |
-| Observability | `react-observability` | `preact-observability` | `vue-observability` |
-| Data fetching | `react-data-fetching` | `preact-data-fetching` | `vue-data-fetching` |
-| Content rendering | `react-content` | `preact-content` | `vue-content` |
-| Privacy / consent | `react-privacy` | `preact-privacy` | `vue-privacy` |
-| SEO metadata | `react-seo-metadata` | `preact-seo-metadata` | `vue-seo-metadata` |
 
 ### Platform
 
@@ -364,8 +353,7 @@ Set `WEB_UI_SKILLS_TOOLS_CONFIG` to point at an explicit config path. Use `--lis
 - `a11y-review` covers audits and QA.
 - `react-a11y`, `preact-a11y`, and `vue-a11y` are framework-specific accessibility skills.
 - `react-ui`, `preact-ui`, `vue-ui`, `vue-router`, `scss-system`, and `storybook-ui` cover component architecture, routing, styling, and UI documentation.
-- `web-performance`, `web-i18n`, `web-testing`, `web-security`, `web-deployment` cover generic production frontend concerns.
-- `web-seo-metadata`, `web-forms`, `web-data-fetching`, `web-observability`, `web-privacy`, `web-content` have framework-specific variants (`react-*`, `preact-*`, `vue-*`).
+- `web-performance`, `web-i18n`, `web-testing`, `web-security`, `web-seo-metadata`, `web-forms`, `web-data-fetching`, `web-observability`, `web-privacy`, `web-content`, `web-deployment` cover generic production frontend concerns.
 - `web-auth-ux`, `web-pwa`, and `web-design-review` cover specialized product and compliance workflows.
 - `netlify-serverless`, the Netlify API skills, `mongodb-netlify`, and `neon-netlify` cover backend, database, and operational concerns.
 
