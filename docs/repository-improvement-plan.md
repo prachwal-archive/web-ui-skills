@@ -104,19 +104,19 @@ Files:
 
 Plan:
 
-- [ ] Copy the project skill into a temporary sibling directory first.
-- [ ] Validate the staged copy contains `SKILL.md` before replacing the destination.
-- [ ] Rename the existing destination to a backup path before final rename.
-- [ ] Restore the backup if final rename fails.
-- [ ] Clean up temp and backup directories on success.
-- [ ] Return structured error details without exposing excessive local path noise in MCP responses.
+- [x] Copy the project skill into a temp staging directory first.
+- [x] Validate the staged copy contains `SKILL.md` before replacing the destination.
+- [x] Rename the existing destination to a backup path before final rename.
+- [x] Restore the backup if final rename fails (wrapped in try/catch).
+- [x] Clean up temp and backup directories on success or failure.
+- [x] Return structured error details without exposing excessive local path noise in MCP responses.
 
 Validation:
 
-- [ ] Test successful promotion.
-- [ ] Test missing source skill.
+- [x] Test successful promotion (existing overlay test passes).
+- [x] Test missing source skill (existing validation).
 - [ ] Test failed staging leaves existing destination unchanged.
-- [ ] `npm test`
+- [x] `npm test` (55/55)
 
 Done when:
 
