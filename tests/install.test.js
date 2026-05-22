@@ -266,6 +266,25 @@ describe('safety', () => {
     }, /Unknown option\(s\): --mystery/);
   });
 
+  test('safeRmSync rejects empty path', () => {
+    assert.throws(() => installer.safeRmSync(''), /empty or invalid path/);
+  });
+
+  test('safeRmSync rejects filesystem root', () => {
+    assert.throws(() => installer.safeRmSync('/'), /filesystem root/);
+  });
+
+  test('safeRmSync rejects path outside allowed directories', () => {
+    assert.throws(() => installer.safeRmSync('/etc/passwd'), /outside allowed directories/);
+  });
+
+  test('safeRmSync accepts temp directory', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'safe-test-'));
+    fs.writeFileSync(path.join(tmp, 'test.txt'), 'hello');
+    installer.safeRmSync(tmp, { recursive: true, force: true });
+    assert.ok(!fs.existsSync(tmp));
+  });
+
   test('starts the local MCP server command without mutating other state', () => {
     const originalSpawnSync = installer.__test__.spawnSync;
     let called = false;

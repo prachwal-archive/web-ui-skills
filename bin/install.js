@@ -117,6 +117,51 @@ function copyDir(src, dest) {
   }
 }
 
+const ALLOWED_RM_PREFIXES = new Set();
+
+function refreshAllowedRmPrefixes() {
+  ALLOWED_RM_PREFIXES.clear();
+  for (const dir of Object.values(TOOLS)) ALLOWED_RM_PREFIXES.add(dir);
+  ALLOWED_RM_PREFIXES.add(getUserSkillsSource());
+  ALLOWED_RM_PREFIXES.add(getProjectSkillsSource());
+  ALLOWED_RM_PREFIXES.add(os.tmpdir());
+}
+
+function assertSafePath(target) {
+  if (!target || typeof target !== 'string') {
+    throw new Error(`Destructive operation blocked: empty or invalid path "${target}"`);
+  }
+
+  const resolved = path.resolve(target);
+
+  if (resolved === '/') {
+    throw new Error('Destructive operation blocked: cannot delete filesystem root "/"');
+  }
+
+  const homeDir = os.homedir();
+  if (resolved === homeDir || resolved === path.resolve(homeDir)) {
+    throw new Error('Destructive operation blocked: cannot delete home directory');
+  }
+
+  refreshAllowedRmPrefixes();
+
+  const allowed = [...ALLOWED_RM_PREFIXES].some((prefix) => {
+    const normalizedPrefix = path.resolve(prefix);
+    return resolved === normalizedPrefix || resolved.startsWith(normalizedPrefix + path.sep);
+  });
+
+  if (!allowed) {
+    throw new Error(
+      `Destructive operation blocked: "${resolved}" is outside allowed directories`,
+    );
+  }
+}
+
+function safeRmSync(target, options = {}) {
+  assertSafePath(target);
+  fs.rmSync(target, options);
+}
+
 function getSkillsSource() {
   return path.join(__dirname, '..', 'skills');
 }
@@ -283,10 +328,10 @@ function syncOverlaySources({
     `${JSON.stringify(mergedGroups, null, 2)}\n`,
   );
 
-  fs.rmSync(destinationRoot, { recursive: true, force: true });
+  safeRmSync(destinationRoot, { recursive: true, force: true });
   fs.mkdirSync(path.dirname(destinationRoot), { recursive: true });
   fs.renameSync(stagingSkillsRoot, destinationRoot);
-  fs.rmSync(stagingParent, { recursive: true, force: true });
+  safeRmSync(stagingParent, { recursive: true, force: true });
 
   return {
     target,
@@ -330,7 +375,7 @@ function promoteOverlaySkill({
     };
   }
 
-  fs.rmSync(destinationRoot, { recursive: true, force: true });
+  safeRmSync(destinationRoot, { recursive: true, force: true });
   fs.mkdirSync(path.dirname(destinationRoot), { recursive: true });
   copyDir(sourceRoot, destinationRoot);
 
@@ -617,7 +662,7 @@ function installForTool(
 
     const src = entry.path;
     const dest = path.join(targetDir, skill);
-    fs.rmSync(dest, { recursive: true, force: true });
+    safeRmSync(dest, { recursive: true, force: true });
     copyDir(src, dest);
     installed += 1;
   }
@@ -647,7 +692,7 @@ function deleteForTool(
 
     const installedEntries = fs.readdirSync(targetDir, { withFileTypes: true });
     const deleted = installedEntries.length;
-    fs.rmSync(targetDir, { recursive: true, force: true });
+    safeRmSync(targetDir, { recursive: true, force: true });
     fs.mkdirSync(targetDir, { recursive: true });
 
     console.log(`  - removed ${deleted} item(s)`);
@@ -672,7 +717,7 @@ function deleteForTool(
   for (const skill of skillsToDelete) {
     const dest = path.join(targetDir, skill);
     if (fs.existsSync(dest)) {
-      fs.rmSync(dest, { recursive: true, force: true });
+      safeRmSync(dest, { recursive: true, force: true });
       deleted += 1;
       console.log(`  - removed ${skill}`);
     } else {
@@ -1009,6 +1054,7 @@ module.exports = {
   promoteOverlaySkill,
   syncOverlaySources,
   validateSkillTree,
+  safeRmSync,
   getCached,
   setCached,
   invalidateCache,
