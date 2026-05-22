@@ -204,18 +204,18 @@ Global Codex setup:
 }
 ```
 
-For this repository, you can override the local Codex MCP defaults with [.codex/config.toml](.codex/config.toml):
+For this repository, you can override the local Codex MCP defaults in your local `.codex/config.toml`:
 
 ```toml
 [mcp_servers.web-ui-skills]
 command = "node"
-args = ["/home/prachwal/src/docs/web-ui-skills/bin/mcp.mjs"]
+args = ["/path/to/web-ui-skills/bin/mcp.mjs"]
 enabled = true
 
 [mcp_servers.web-ui-skills.env]
 WEB_UI_SKILLS_CLIENT = "codex"
 WEB_UI_SKILLS_PROJECT = "true"
-WEB_UI_SKILLS_PROJECT_ROOT = "/home/prachwal/src/docs/web-ui-skills"
+WEB_UI_SKILLS_PROJECT_ROOT = "/path/to/web-ui-skills"
 REDIS_URL = "redis://127.0.0.1:6379"
 QDRANT_URL = "http://127.0.0.1:6333"
 ```
@@ -349,3 +349,99 @@ We welcome contributions! Please see [AGENTS.md](AGENTS.md) for detailed contrib
 - No platform-specific code without clear cross-platform alternatives
 - Content must be original or properly licensed
 - Skills should remain relevant as technologies evolve
+
+## Review Output Schema
+
+Review skills (`a11y-review`, `web-design-review`) produce structured findings. Each finding follows this shape:
+
+```typescript
+interface ReviewFinding {
+  id: string;
+  title: string;
+  severity: 'blocker' | 'high' | 'medium' | 'low' | 'nit';
+  decision: 'fix_now' | 'backlog' | 'ignore' | 'needs_human';
+  confidence: 'high' | 'medium' | 'low';
+  domain: 'accessibility' | 'design' | 'correctness' | 'performance' | 'content' | 'security';
+  evidence: string;
+  file: string;
+  line?: number;
+  selector?: string;
+  recommended_fix: string;
+}
+
+interface ReviewOutput {
+  mode: 'blocking-review' | 'quality-review' | 'full-review';
+  summary: {
+    blockers: number;
+    fix_now: number;
+    backlog: number;
+    needs_human: number;
+    ignored_or_nits: number;
+  };
+  findings: ReviewFinding[];
+  backlog_suggestions: ReviewFinding[];
+}
+```
+
+### Review modes
+
+| Mode | Default? | Max findings | Scope |
+|---|---|---|---|
+| `blocking-review` | yes | 7 | Blockers, regressions, broken UX, WCAG failures, missing critical states |
+| `quality-review` | no | 10 | Consistency, polish, responsive refinement, design-system drift |
+| `full-review` | no | 12 | Both blocking and quality, capped by budget |
+
+### Decision mapping
+
+| Severity | Default decision |
+|---|---|
+| `blocker` | `fix_now` |
+| `high` | `fix_now` |
+| `medium` | `fix_now` or `needs_human` |
+| `low` | `backlog` |
+| `nit` | `ignore` or `backlog` |
+
+### Example: blocking-review output
+
+```json
+{
+  "mode": "blocking-review",
+  "summary": { "blockers": 1, "fix_now": 2, "backlog": 0, "needs_human": 0, "ignored_or_nits": 0 },
+  "findings": [
+    {
+      "id": "a11y-001",
+      "title": "Missing accessible name on nav landmark",
+      "severity": "high",
+      "decision": "fix_now",
+      "confidence": "high",
+      "domain": "accessibility",
+      "evidence": "<nav> has no aria-label. Two <nav> elements exist; screen reader cannot distinguish them.",
+      "file": "src/components/Header.tsx",
+      "line": 12,
+      "selector": "nav:first-of-type",
+      "recommended_fix": "Add aria-label=\"Primary navigation\" to the first <nav> and aria-label=\"Footer navigation\" to the second."
+    }
+  ],
+  "backlog_suggestions": []
+}
+```
+
+### Example: deduped finding
+
+```json
+{
+  "id": "a11y-003",
+  "title": "Missing visible focus indicator on interactive elements",
+  "severity": "high",
+  "decision": "fix_now",
+  "confidence": "high",
+  "domain": "accessibility",
+  "evidence": "All icon buttons in the toolbar use :focus { outline: none } without a custom focus style.",
+  "file": "src/components/Toolbar.tsx",
+  "recommended_fix": "Replace with :focus-visible { outline: 2px solid var(--color-focus) } or a custom focus ring.",
+  "similar_occurrences": [
+    { "file": "src/components/Toolbar.tsx", "selector": "button.icon-btn", "count": 5 },
+    { "file": "src/components/Menu.tsx", "selector": "li > button", "count": 3 }
+  ]
+}
+```

@@ -844,6 +844,95 @@ function createServer(options = {}) {
     },
   );
 
+  server.registerPrompt(
+    'blocking-review-plan',
+    {
+      title: 'Blocking Review Plan',
+      description: 'Generate a plan for a focused blocking review with budget and schema.',
+    },
+    async () => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: [
+            'Run a blocking review:',
+            '- Mode: blocking-review.',
+            '- Max findings: 7.',
+            '- Severity gate: only blocker and high findings.',
+            '- Domains: accessibility or design depending on the skill.',
+            '- Decision: all findings must be fix_now or needs_human.',
+            '- Output format: ReviewOutput with findings array and summary count.',
+            '- Dedupe: group repeated instances into one finding with similar_occurrences.',
+            '- Overflow: if more than 7 issues exist, move extras to backlog_suggestions.',
+            '- Do not report general WCAG or design education as findings.',
+            '- Do not expand the budget unless the user explicitly asks.',
+          ].join('\n'),
+        },
+      }],
+    }),
+  );
+
+  server.registerPrompt(
+    'quality-review-plan',
+    {
+      title: 'Quality Review Plan',
+      description: 'Generate a plan for a broader quality review with budget and schema.',
+    },
+    async () => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: [
+            'Run a quality review:',
+            '- Mode: quality-review.',
+            '- Max findings: 10.',
+            '- Scope: consistency, polish, responsive refinement, design-system drift.',
+            '- Domains: accessibility or design depending on the skill.',
+            '- Decision: findings can be fix_now, backlog, ignore, or needs_human.',
+            '- Output format: ReviewOutput with findings array and summary count.',
+            '- Dedupe: group repeated instances into one finding with similar_occurrences.',
+            '- Overflow: if more than 10 issues exist, move extras to backlog_suggestions.',
+            '- Subjective taste must be nit or needs_human, never blocker.',
+            '- Do not expand the budget unless the user explicitly asks.',
+          ].join('\n'),
+        },
+      }],
+    }),
+  );
+
+  server.registerPrompt(
+    'review-triage-plan',
+    {
+      title: 'Review Triage Plan',
+      description: 'Generate a plan for triaging existing review findings by severity, decision, and domain.',
+    },
+    async () => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: [
+            'Triage review findings:',
+            '- Sort all findings by severity: blocker > high > medium > low > nit.',
+            '- Within each severity, sort by confidence: high > medium > low.',
+            '- Group by domain: accessibility and design are separate domains.',
+            '- For each finding, confirm the decision is appropriate:',
+            '  - blocker → fix_now',
+            '  - high → fix_now',
+            '  - medium → fix_now or needs_human',
+            '  - low → backlog',
+            '  - nit → ignore or backlog',
+            '- Merge duplicates: same domain + severity + file + normalized title.',
+            '- Produce a ReviewOutput with the triaged findings and summary count.',
+            '- Move low-priority overflow to backlog_suggestions.',
+          ].join('\n'),
+        },
+      }],
+    }),
+  );
+
   return server;
 }
 

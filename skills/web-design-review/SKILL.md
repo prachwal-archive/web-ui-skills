@@ -7,6 +7,91 @@ description: Use when reviewing visual design implementation against design spec
 
 Use this skill when evaluating whether implemented UI matches design intent, reviewing component visual consistency, or auditing design token usage across a codebase.
 
+## Review mode
+
+Pick one mode before starting. `blocking-review` is the default.
+
+### blocking-review (default)
+
+Scope: broken UX, responsive failure, missing critical states.
+Max findings: 7.
+Prioritize:
+- layout overflow or collapse at supported viewports
+- missing or broken interactive states (hover, focus, active, disabled)
+- dark mode that makes content unreadable
+- color contrast failures for required content
+- completely missing responsive behavior
+
+### quality-review
+
+Scope: consistency, polish, responsive refinement, design-system drift, token usage.
+Max findings: 10.
+Use when the user asks for a broader pass. Do not switch to `full-review` on large diffs without asking.
+
+### full-review
+
+Scope: both blocking and quality findings.
+Max findings: 12.
+Total cap includes every finding. Overflow goes into `backlog_suggestions`, not the main finding list.
+
+## Finding schema
+
+Every finding must include:
+- `id` — unique within this review
+- `title` — concise description
+- `severity`: `blocker | high | medium | low | nit`
+- `decision`: `fix_now | backlog | ignore | needs_human`
+- `confidence`: `high | medium | low`
+- `domain` — `design` for this skill
+- `evidence` — concrete observation, not general design education
+- `file` — source file path
+- `line` or `selector` when available
+- `recommended_fix` — actionable suggestion
+
+Default decision mapping:
+- `blocker` → `fix_now`
+- `high` → `fix_now`
+- `medium` → `fix_now` or `needs_human`
+- `low` → `backlog`
+- `nit` → `ignore` or `backlog`
+
+`blocker` and `high` findings must include concrete evidence. `nit` findings must never block merge.
+
+Subjective taste must be `nit` or `needs_human`, never `blocker`. Do not block merge on visual preference without a product/design standard.
+
+## Deduplication
+
+Group repeated instances of the same issue into one finding with a `similar_occurrences` array.
+
+Dedupe key: `domain` + `severity` + `file` + `normalized title`.
+
+Example: repeated low contrast in one token → one finding with occurrences across files.
+
+Merge duplicates across this skill and `a11y-review` when both report the same UI defect.
+
+## Budget
+
+Rank findings by severity, confidence, and user impact. Cut at the mode's max findings. Move overflow to `backlog_suggestions`. Do not expand the budget unless the user explicitly asks.
+
+Include a summary count at the top:
+- `blockers`
+- `fix_now`
+- `backlog`
+- `needs_human`
+- `ignored_or_nits`
+
+## Finding categories
+
+Separate findings into these categories. Each category maps to a severity range.
+
+| Category | Severity range | Examples |
+|---|---|---|
+| broken UX | `blocker` / `high` | Missing state, broken interaction, unreadable content |
+| responsive failure | `high` / `medium` | Overflow, collapse, missing breakpoint behavior |
+| design-system drift | `medium` / `low` | Hardcoded value instead of token, wrong spacing scale |
+| polish | `low` / `nit` | 1px misalignment, subtle color shift |
+| subjective taste | `nit` / `needs_human` | "I would have chosen a different font" |
+
 ## Core goals
 
 - Identify gaps between design spec and implementation without re-implementing the design system.

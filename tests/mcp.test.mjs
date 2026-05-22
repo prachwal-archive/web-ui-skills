@@ -164,6 +164,9 @@ describe('prompts', () => {
     assert.ok(server._registeredPrompts['install-group-plan']);
     assert.ok(server._registeredPrompts['update-skills-plan']);
     assert.ok(server._registeredPrompts['remove-skills-plan']);
+    assert.ok(server._registeredPrompts['blocking-review-plan']);
+    assert.ok(server._registeredPrompts['quality-review-plan']);
+    assert.ok(server._registeredPrompts['review-triage-plan']);
   });
 });
 
@@ -674,6 +677,43 @@ describe('skill content and reference tools', { concurrency: false }, () => {
         process.env.WEB_UI_SKILLS_USER_SOURCE = originalUserSource;
       }
     }
+  });
+});
+
+describe('review content', () => {
+  function getSkillMd(name) {
+    const base = path.resolve(import.meta.dirname, '..', 'skills', name, 'SKILL.md');
+    return fs.readFileSync(base, 'utf8');
+  }
+
+  test('a11y-review SKILL.md contains required review terms', () => {
+    const content = getSkillMd('a11y-review');
+    assert.ok(content.includes('severity'));
+    assert.ok(content.includes('decision'));
+    assert.ok(content.includes('confidence'));
+    assert.ok(content.includes('blocking-review'));
+    assert.ok(content.includes('backlog_suggestions'));
+    assert.ok(content.includes('similar_occurrences'));
+  });
+
+  test('web-design-review SKILL.md contains required review terms', () => {
+    const content = getSkillMd('web-design-review');
+    assert.ok(content.includes('severity'));
+    assert.ok(content.includes('decision'));
+    assert.ok(content.includes('confidence'));
+    assert.ok(content.includes('blocking-review'));
+    assert.ok(content.includes('backlog_suggestions'));
+    assert.ok(content.includes('similar_occurrences'));
+  });
+
+  test('a11y-review mentions deduplication', () => {
+    const content = getSkillMd('a11y-review');
+    assert.ok(content.includes('similar_occurrences'));
+  });
+
+  test('web-design-review mentions deduplication', () => {
+    const content = getSkillMd('web-design-review');
+    assert.ok(content.includes('similar_occurrences'));
   });
 });
 

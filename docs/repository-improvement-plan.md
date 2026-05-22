@@ -10,7 +10,6 @@ Files:
 - [package-lock.json](../package-lock.json)
 - [.gitlab-ci.yml](../.gitlab-ci.yml)
 - [.github/workflows/npm-publish.yml](../.github/workflows/npm-publish.yml)
-- [.github/workflows/release-on-main.yml](../.github/workflows/release-on-main.yml)
 - [README.md](../README.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md)
 
@@ -186,7 +185,6 @@ Done when:
 
 Files:
 
-- [.github/workflows/release-on-main.yml](../.github/workflows/release-on-main.yml)
 - [.github/workflows/npm-publish.yml](../.github/workflows/npm-publish.yml)
 - [.gitlab-ci.yml](../.gitlab-ci.yml)
 - [package.json](../package.json)
@@ -275,7 +273,6 @@ Done when:
 Files:
 
 - [.github/workflows/npm-publish.yml](../.github/workflows/npm-publish.yml)
-- [.github/workflows/release-on-main.yml](../.github/workflows/release-on-main.yml)
 - [.github/workflows/dependency-audit.yml](../.github/workflows/dependency-audit.yml)
 - [.gitlab-ci.yml](../.gitlab-ci.yml)
 - [package.json](../package.json)
@@ -299,3 +296,130 @@ Validation:
 Done when:
 
 - Dependency risk is checked on a schedule and release checks remain deterministic.
+
+### 11. Add Review Volume Control For Agent Runs
+
+Goal:
+
+- Prevent parallel agent runs from producing unbounded, duplicated, or low-priority review output.
+- Make `a11y-review` and `web-design-review` produce triageable findings instead of long flat checklists.
+
+Files:
+
+- [bin/mcp.mjs](../bin/mcp.mjs)
+- [bin/install.js](../bin/install.js)
+- [skills/a11y-review/SKILL.md](../skills/a11y-review/SKILL.md)
+- [skills/a11y-review/references/review-checklist.md](../skills/a11y-review/references/review-checklist.md)
+- [skills/web-design-review/SKILL.md](../skills/web-design-review/SKILL.md)
+- [skills/web-design-review/references/responsive.md](../skills/web-design-review/references/responsive.md)
+- [skills/web-design-review/references/token-audit.md](../skills/web-design-review/references/token-audit.md)
+- [tests/mcp.test.mjs](../tests/mcp.test.mjs)
+- [tests/install.test.js](../tests/install.test.js)
+- [README.md](../README.md)
+
+#### 11.1 Define Review Finding Schema
+
+- [x] Add a documented `ReviewFinding` shape in [README.md](../README.md) as a TypeScript interface with full field list.
+- [x] Require these fields for every review finding:
+  - `id`
+  - `title`
+  - `severity`: `blocker | high | medium | low | nit`
+  - `decision`: `fix_now | backlog | ignore | needs_human`
+  - `confidence`: `high | medium | low`
+  - `domain`: `accessibility | design | correctness | performance | content | security`
+  - `evidence`
+  - `file`
+  - `line` or `selector` when available
+  - `recommended_fix`
+- [x] Document that `blocker` and `high` findings must include concrete evidence.
+- [x] Document that `nit` findings must never block merge.
+
+Acceptance:
+
+- A reviewer can sort findings by severity, decision, confidence, and domain without reading prose first.
+
+#### 11.2 Add Review Modes
+
+- [x] Define three modes in both SKILL.md files:
+  - `blocking-review`: only blockers, regressions, broken UX, WCAG failures, and missing critical states.
+  - `quality-review`: consistency, polish, copy, responsive refinement, token/design-system drift.
+  - `full-review`: both blocking and quality findings, still capped by budget.
+- [x] Make `blocking-review` the default mode in both SKILL.md files.
+- [x] Add guidance that agents should ask before switching to `full-review` on large diffs.
+- [x] Add examples of what belongs in each mode (inline in SKILL.md).
+
+#### 11.3 Add Review Budget
+
+- [x] Define default budgets in both SKILL.md files:
+  - `blocking-review`: max 7 findings.
+  - `quality-review`: max 10 findings.
+  - `full-review`: max 12 findings total.
+- [x] Require agents to rank findings by severity, confidence, and user impact.
+- [x] Require overflow items to go into `backlog_suggestions`, not the main finding list.
+- [x] Require a summary count with `ReviewOutput.summary`.
+- [x] Add explicit wording that agents must not expand the budget unless the user asks.
+
+#### 11.4 Add Dedupe Rules
+
+- [x] Define a deterministic dedupe key: `domain + severity + file + normalized title`.
+- [x] Document that repeated instances of the same issue should be grouped into one finding.
+- [x] Add a `similar_occurrences` field for grouped findings (inline in SKILL.md + example in README).
+- [x] Require agents to merge duplicates across `a11y-review` and `web-design-review`.
+- [x] Add examples in README.md (deduped focus indicator finding).
+
+#### 11.5 Add Fix/Backlog Split
+
+- [x] Require every finding to choose one decision:
+  - `fix_now`: must be addressed before merge.
+  - `backlog`: valid issue, not blocking current change.
+  - `ignore`: acknowledged but intentionally not actionable.
+  - `needs_human`: product/design/accessibility judgment required.
+- [x] Define default decision mapping in both SKILL.md files.
+- [x] Require `needs_human` items to include the exact decision needed.
+- [x] Require `ignore` items to include a short reason.
+
+Acceptance:
+
+- The output tells the reviewer what to do with each item.
+
+#### 11.6 Update `a11y-review`
+
+- [x] Rewrite [skills/a11y-review/SKILL.md](../skills/a11y-review/SKILL.md) with explicit priorities.
+- [x] Prioritize: keyboard access blockers, focus visibility failures, missing accessible names, invalid ARIA, color contrast failures, form error announcement failures.
+- [x] Move broad compliance reminders into backlog guidance.
+- [x] Add instruction: do not report general WCAG education as a finding.
+- [x] Add instruction: report patterns, not every repeated instance.
+
+#### 11.7 Update `web-design-review`
+
+- [x] Rewrite [skills/web-design-review/SKILL.md](../skills/web-design-review/SKILL.md) with separated categories: broken UX, responsive failure, design-system drift, polish, subjective taste.
+- [x] Add severity mapping table per category.
+- [x] Add instruction: subjective taste must be `nit` or `needs_human`, never `blocker`.
+- [x] Add instruction: do not block merge on visual preference without a product/design standard.
+
+#### 11.8 Add MCP Prompt Support
+
+- [x] Add 3 new MCP prompts in [bin/mcp.mjs](../bin/mcp.mjs): `blocking-review-plan`, `quality-review-plan`, `review-triage-plan`.
+- [x] Include review budget, severity gate, and output schema in prompts.
+- [x] Add tests in [tests/mcp.test.mjs](../tests/mcp.test.mjs) that prompts are registered.
+- [x] Keep prompt responses concise for downstream agents.
+
+#### 11.9 Add Validation Examples
+
+- [x] Add `ReviewOutput` TypeScript interface to [README.md](../README.md).
+- [x] Include one `blocking-review` example with findings.
+- [x] Include one deduped finding example with `similar_occurrences`.
+- [x] Keep examples short and schema-consistent.
+
+#### 11.10 Add Tests And Checks
+
+- [x] Add tests that review prompts exist in [tests/mcp.test.mjs](../tests/mcp.test.mjs).
+- [x] Add tests that review skill docs contain required terms: `severity`, `decision`, `confidence`, `blocking-review`, `backlog_suggestions`, `similar_occurrences`.
+- [x] Add tests to ensure both review skills mention dedupe/grouping.
+- [x] `npm test` (72/72)
+- [x] `npm run check-md-refs`
+- [x] `npm run check-skills`
+
+Acceptance:
+
+- CI fails if the review-volume contract is accidentally removed from core review skills.
