@@ -1,6 +1,7 @@
 // bin/vector.mjs
 const COLLECTION = 'web_ui_skills';
 const VECTOR_SIZE = 384;
+const PACKAGE_NAME = 'web-ui-skills';
 
 async function loadQdrant(qdrantUrl) {
   try {
@@ -30,16 +31,35 @@ async function embed(pipe, text) {
 async function ensureCollection(client) {
   const { collections } = await client.getCollections();
   const exists = collections.some((c) => c.name === COLLECTION);
-  if (exists) {
-    await client.recreateCollection(COLLECTION, {
+  if (!exists) {
+    await client.createCollection(COLLECTION, {
       vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
     });
-    return;
   }
+}
 
-  await client.createCollection(COLLECTION, {
-    vectors: { size: VECTOR_SIZE, distance: 'Cosine' },
-  });
+async function deletePackagePoints(client, version) {
+  const namespace = version ? `${PACKAGE_NAME}@${version}` : PACKAGE_NAME;
+  const hasMore = true;
+  let offset;
+  while (hasMore) {
+    const result = await client.scroll(COLLECTION, {
+      filter: {
+        must: [{ key: 'namespace', match: { value: namespace } }],
+      },
+      limit: 100,
+      offset,
+    });
+    const ids = result.points.map((p) => p.id);
+    if (ids.length > 0) {
+      await client.delete(COLLECTION, { points: ids });
+    }
+    if (result.next_page_offset) {
+      offset = result.next_page_offset;
+    } else {
+      break;
+    }
+  }
 }
 
 export class VectorSearch {
@@ -48,6 +68,7 @@ export class VectorSearch {
     this._pipe = null;
     this._indexed = false;
     this._initPromise = null;
+    this._version = null;
   }
 
   _init() {
@@ -70,20 +91,29 @@ export class VectorSearch {
     return this._client !== null;
   }
 
-  async ensureIndex(skills) {
+  async ensureIndex(skills, version) {
     if (!(await this.available())) return;
+    this._version = version;
     await ensureCollection(this._client);
+    await deletePackagePoints(this._client, version);
 
+    const namespace = version ? `${PACKAGE_NAME}@${version}` : PACKAGE_NAME;
     const points = [];
     for (const skill of skills) {
       const text = [skill.name, skill.description, (skill.content || '').slice(0, 500)]
         .filter(Boolean)
         .join(' ');
       const vector = await embed(this._pipe, text);
-      points.push({ id: hashCode(skill.name) >>> 0, vector, payload: { name: skill.name } });
+      points.push({
+        id: hashCode(`${namespace}:${skill.name}`) >>> 0,
+        vector,
+        payload: { name: skill.name, namespace },
+      });
     }
 
-    await this._client.upsert(COLLECTION, { points });
+    if (points.length > 0) {
+      await this._client.upsert(COLLECTION, { points });
+    }
     this._indexed = true;
   }
 
@@ -92,7 +122,14 @@ export class VectorSearch {
     if (!this._indexed) return null;
 
     const vector = await embed(this._pipe, query);
-    const results = await this._client.search(COLLECTION, { vector, limit });
+    const namespace = this._version ? `${PACKAGE_NAME}@${this._version}` : PACKAGE_NAME;
+    const results = await this._client.search(COLLECTION, {
+      vector,
+      limit,
+      filter: {
+        must: [{ key: 'namespace', match: { value: namespace } }],
+      },
+    });
     return results.map((r) => ({ name: r.payload.name, score: r.score }));
   }
 }

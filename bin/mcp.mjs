@@ -371,7 +371,7 @@ function createServer(options = {}) {
   setImmediate(async () => {
     if (await vectorSearch.available()) {
       const skills = installer.getAllSkillDetails();
-      await vectorSearch.ensureIndex(skills).catch(() => {});
+      await vectorSearch.ensureIndex(skills, packageVersion).catch(() => {});
     }
   });
 
