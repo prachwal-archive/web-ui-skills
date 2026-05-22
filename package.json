@@ -21,6 +21,7 @@
     "list-skills": "node bin/install.js --list",
     "mcp": "node bin/mcp.mjs",
     "test": "node --test",
+    "test:pack": "npm pack --dry-run && node --test --test-name-pattern='packed tarball' tests/pack.test.mjs",
     "check-md-refs": "node scripts/check-md-refs.js .",
     "lint:md": "markdownlint --dot '**/*.md'",
     "lint:md:fix": "markdownlint --dot '**/*.md' --fix"
