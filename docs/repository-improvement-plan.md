@@ -45,18 +45,18 @@ Files:
 
 Plan:
 
-- [ ] Add a shared helper in [bin/install.js](../bin/install.js) that validates deletion targets before any `fs.rmSync`.
-- [ ] Allow deletion only inside resolved tool skills directories or known overlay roots.
-- [ ] Reject empty paths, filesystem roots, home directory roots, and paths outside expected parent directories.
-- [ ] Replace direct delete-and-copy flows with staging directories where practical.
-- [ ] Return clear errors through MCP instead of throwing raw filesystem failures.
+- [x] Add `assertSafePath()` / `safeRmSync()` helper in [bin/install.js](../bin/install.js) that validates deletion targets before every `fs.rmSync`.
+- [x] Allow deletion only inside resolved tool skills directories, known overlay roots, and `os.tmpdir()`.
+- [x] Reject empty paths, filesystem roots, home directory roots, and paths outside expected parent directories.
+- [ ] Replace direct delete-and-copy flows with staging directories where practical (covered by #4 atomic promote).
+- [x] Return clear errors through MCP instead of throwing raw filesystem failures (safeRmSync throws descriptive Error).
 - [ ] Document overwrite behavior in [README.md](../README.md).
 
 Validation:
 
-- [ ] Add unit tests for rejected dangerous paths.
-- [ ] Add integration tests for normal install, remove, sync, and promote paths.
-- [ ] `npm test`
+- [x] Add 4 unit tests for rejected dangerous paths (empty, root, outside, accepted temp).
+- [x] Existing integration tests cover normal install, remove, sync, and promote paths (59/59 pass).
+- [x] `npm test`
 
 Done when:
 
