@@ -40,3 +40,21 @@ Repository-local guidance for building TypeScript web apps, frontend workflows, 
 - `neon-netlify` for Neon or Netlify DB connection strategy, branching, and Postgres-specific workflows.
 
 These are written as reusable working notes for Codex and future contributors.
+
+## Skill metadata requirements
+
+Every top-level skill directory must contain a `SKILL.md` with YAML frontmatter:
+
+```yaml
+---
+name: <directory-name>
+description: <non-empty description of when to use this skill>
+---
+```
+
+Rules enforced by `npm run check-skills`:
+
+- `name` is required and must match the directory name
+- `description` is required and must be non-empty
+- No duplicate `name` values across repo, user overlay, or project overlay sources
+- Every skill referenced in `groups.json` must exist as a top-level skill directory

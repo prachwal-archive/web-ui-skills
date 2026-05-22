@@ -480,14 +480,21 @@ function validateSkillTree(skillsSource = getSkillsSources()) {
   const source = sources[0];
   const topLevelSkills = getTopLevelSkills(source);
   const warnings = [];
+  const skillSet = new Set(topLevelSkills);
 
   for (const skill of topLevelSkills) {
     const skillFile = path.join(source, skill, SKILL_FILE);
-    const skillName = readSkillName(skillFile);
-    if (!skillName) {
-      warnings.push(`Missing frontmatter name in ${path.relative(source, skillFile)}`);
-    } else if (skillName !== skill) {
-      warnings.push(`Skill directory/name mismatch: ${skill} uses name "${skillName}"`);
+    const meta = readSkillMetadata(skillFile);
+    const relative = path.relative(source, skillFile);
+
+    if (!meta.name) {
+      warnings.push(`Missing frontmatter name in ${relative}`);
+    } else if (meta.name !== skill) {
+      warnings.push(`Skill directory/name mismatch: ${skill} uses name "${meta.name}"`);
+    }
+
+    if (!meta.description) {
+      warnings.push(`Empty frontmatter description in ${relative}`);
     }
   }
 
@@ -502,6 +509,15 @@ function validateSkillTree(skillsSource = getSkillsSources()) {
       warnings.push(`Duplicate skill name "${skillName}" in ${previous} and ${relativePath}`);
     } else {
       names.set(skillName, relativePath);
+    }
+  }
+
+  const groups = loadSkillGroupsFromSource(source);
+  for (const [groupName, group] of Object.entries(groups)) {
+    for (const member of group.skills) {
+      if (!skillSet.has(member)) {
+        warnings.push(`Group "${groupName}" references missing skill "${member}"`);
+      }
     }
   }
 

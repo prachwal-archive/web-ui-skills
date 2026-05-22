@@ -14,12 +14,12 @@ function createTempHome() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'web-ui-skills-test-'));
 }
 
-function writeSkill(dir, name, description) {
+function writeSkill(dir, name, description, extraFields = '') {
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(
-    path.join(dir, 'SKILL.md'),
-    `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`,
-  );
+  const frontmatter = extraFields
+    ? `---\nname: ${name}\ndescription: ${description}\n${extraFields}\n---\n\n# ${name}\n`
+    : `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`;
+  fs.writeFileSync(path.join(dir, 'SKILL.md'), frontmatter);
 }
 
 function createOverlaySource(root = createTempHome()) {
@@ -264,6 +264,68 @@ describe('safety', () => {
     assert.throws(() => {
       runCli(['--mystery']);
     }, /Unknown option\(s\): --mystery/);
+  });
+
+  test('validateSkillTree detects missing name in a single source', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'my-skill'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'my-skill', 'SKILL.md'), '---\ndescription: something\n---\n\n# test\n');
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.ok(warnings.some((w) => w.includes('Missing frontmatter name')));
+  });
+
+  test('validateSkillTree detects empty description', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'my-skill'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'my-skill', 'SKILL.md'), '---\nname: my-skill\ndescription: \n---\n\n# test\n');
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.ok(warnings.some((w) => w.includes('Empty frontmatter description')));
+  });
+
+  test('validateSkillTree detects name/directory mismatch', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'my-skill'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'my-skill', 'SKILL.md'), '---\nname: other-name\ndescription: something\n---\n\n# test\n');
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.ok(warnings.some((w) => w.includes('directory/name mismatch')));
+  });
+
+  test('validateSkillTree detects duplicate names', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'skill-a'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'skill-b'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'skill-a', 'SKILL.md'), '---\nname: duplicate-name\ndescription: one\n---\n\n# one\n');
+    fs.writeFileSync(path.join(root, 'skill-b', 'SKILL.md'), '---\nname: duplicate-name\ndescription: two\n---\n\n# two\n');
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.ok(warnings.some((w) => w.includes('Duplicate skill name')));
+  });
+
+  test('validateSkillTree detects group referencing missing skill', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'existing-skill'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'existing-skill', 'SKILL.md'), '---\nname: existing-skill\ndescription: exists\n---\n\n# existing\n');
+    fs.writeFileSync(path.join(root, 'groups.json'), JSON.stringify({
+      ui: { description: 'test group', skills: ['existing-skill', 'missing-skill'] },
+    }));
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.ok(warnings.some((w) => w.includes('references missing skill')));
+  });
+
+  test('validateSkillTree passes clean structure', () => {
+    const root = createTempHome();
+    fs.mkdirSync(path.join(root, 'good-skill'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'good-skill', 'SKILL.md'), '---\nname: good-skill\ndescription: a good skill\n---\n\n# good\n');
+    fs.writeFileSync(path.join(root, 'groups.json'), JSON.stringify({
+      ui: { description: 'test group', skills: ['good-skill'] },
+    }));
+
+    const { warnings } = installer.validateSkillTree(root);
+    assert.equal(warnings.length, 0);
   });
 
   test('starts the local MCP server command without mutating other state', () => {
