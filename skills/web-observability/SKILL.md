@@ -3,9 +3,9 @@ name: web-observability
 description: Use when adding or reviewing frontend observability, including error reporting, analytics events, Core Web Vitals collection, logging, privacy-safe telemetry, and release diagnostics.
 ---
 
-# Web Observability Skill
+# Web Observability Skill (generic)
 
-Use this skill when a web app needs measurable production behavior, not just local test coverage.
+Use this skill when a web app needs measurable production behavior. For framework-specific implementation patterns, use `react-observability`, `preact-observability`, or `vue-observability`.
 
 ## Core goals
 
@@ -43,20 +43,3 @@ Use this skill when a web app needs measurable production behavior, not just loc
 - Confirm source maps resolve stack traces in the target environment.
 - Check that sensitive form values and auth headers are not sent.
 - Confirm Web Vitals reporting does not double-count SPA route transitions.
-
-## Reference files
-
-### [`references/error-reporting.md`](references/error-reporting.md)
-**Runtime error capture** — Preact `ErrorBoundary` component with `componentDidCatch`, `reportError()` utility with dev/prod split and context sanitization, `unhandledrejection` global binding, async `withErrorReporting()` wrapper, source map upload and removal in CI. Start here for any error monitoring setup.
-
-### [`references/analytics.md`](references/analytics.md)
-**Typed analytics events** — `AnalyticsEvent` discriminated union, `track<N>()` with consent gate and dev bypass, SPA `page_view` deduplication, PII constraints table, hashed email pattern (server-side only), event naming conventions. Use this as the template for all product analytics instrumentation.
-
-### [`references/vitals.md`](references/vitals.md)
-**Core Web Vitals collection** — `web-vitals` setup with all five metrics (CLS, FCP, INP, LCP, TTFB), `sendBeacon` with `fetch keepalive` fallback, Netlify Functions ingestion endpoint, SPA route transition handling, thresholds reference table, alerting guidance. Use when real-user performance measurement is required.
-
-## External references
-
-- [web.dev: Core Web Vitals](https://web.dev/articles/vitals)
-- [web-vitals npm package](https://github.com/GoogleChrome/web-vitals)
-- [MDN: Reporting API](https://developer.mozilla.org/en-US/docs/Web/API/Reporting_API)

@@ -7,14 +7,14 @@ description: Use when maintaining repository Markdown, Copilot instructions, Cod
 
 Read first:
 
-- `.github/instructions/docs-markdown.instructions.md`
-- `.github/copilot-instructions.md`
-- `AGENTS.md`
+- [`references/docs-markdown.md`](references/docs-markdown.md) — Markdown conventions and formatting rules.
+- [`references/docs-tsdoc.md`](references/docs-tsdoc.md) — TSDoc/JSDoc conventions.
+- `AGENTS.md` or equivalent repo instructions file.
 
-Organization rules:
+## Organization rules
 
 - Keep always-loaded instructions short and durable.
-- Put heavyweight examples, skeletons, and eval tasks in `.github/prompts`.
-- Put Codex task routers in `.agents/skills/*/SKILL.md`.
-- Do not duplicate content across Copilot instructions, prompts, and skills; cross-reference instead.
-- Verify Markdown with `npm run lint:md`.
+- Put heavyweight examples, skeletons, and eval tasks in prompt files.
+- Put task routers in skill directories.
+- Do not duplicate content across instruction files, prompts, and skills; cross-reference instead.
+- Verify Markdown with the project's lint command.

@@ -25,23 +25,27 @@ This repository bundles Codex skills for building professional web applications.
 
 ### UI
 
-- `preact-ui` - Preact pages and components, MVVM architecture, signals, hooks, forms, routing, data fetching, accessibility, SCSS integration, and tests.
+- `react-ui` - React TSX pages and components, hooks, state management, styling, routing, and Testing Library coverage.
+- `preact-ui` - Preact pages and components, MVVM architecture, signals, hooks, forms, routing, accessibility, SCSS integration, and tests.
 - `vue-ui` - Vue 3 applications and components, Composition API, SFC structure, Pinia state, Vue Router, Vue I18n, Vite, Vitest, Vue Test Utils, accessibility, and production app architecture.
 - `vue-router` - Vue Router routes, route names, navigation, guards, lazy-loaded pages, scroll behavior, and route-level accessibility.
 - `scss-system` - SCSS-based design systems, component libraries, tokens, mixins, functions, color palettes, typography, spacing, responsiveness, theming, and folder architecture.
 - `storybook-ui` - Storybook setup, CSF stories, interaction tests, Vitest addon, accessibility, visual testing, and component documentation workflows.
-- `frontend-ui` - React TSX pages and components, Tailwind v4 styling, accessibility, and Testing Library coverage.
+- `react-ui` - React TSX pages and components, hooks, state management, styling, routing, and Testing Library coverage.
+- `preact-ui` - Preact pages and components, MVVM architecture, signals, hooks, forms, routing, data fetching, accessibility, SCSS integration, and tests.
 
 ### Quality
 
 - `web-accessibility-standards` - accessible web interfaces, semantic HTML, ARIA, keyboard support, responsive mobile-first layouts, focus management, dynamic content, and automated accessibility checks.
 - `a11y-review` - accessibility reviews for WCAG mapping, ARIA misuse, keyboard access, focus management, responsive/mobile behavior, and QA findings.
-- `frontend-a11y` - frontend accessibility implementation, semantic HTML, keyboard flow, focus management, ARIA, forms, contrast, motion, and responsive behavior.
-- `web-testing` - web UI test strategy, Playwright end-to-end tests, regression coverage, stable locators, visual comparisons, browser compatibility, progressive enhancement, and CI reporting.
+- `react-a11y` - React accessibility implementation, semantic HTML, ARIA, keyboard flow, focus management, ErrorBoundary, forms, and Testing Library checks.
+- `preact-a11y` - Preact accessibility implementation, semantic HTML, ARIA, signals-based ARIA binding, focus management, and Testing Library checks.
+- `vue-a11y` - Vue 3 accessibility implementation, semantic HTML, ARIA, `v-bind="$attrs"`, Teleport, focus management, and Vue Test Utils checks.
+- `web-testing` - web UI test strategy, unit/component/integration/E2E layers, stable locators, accessibility checks, and CI reporting.
 - `vitest-vue-testing` - Vue 3 and TypeScript tests with Vitest, Vue Test Utils, jsdom, snapshots, mocks, router behavior, and coverage.
 - `web-design-review` - visual design implementation against design specs, including spacing, typography, color, responsive behavior, component consistency, dark mode, and token alignment.
 
-### Frontend Product
+### Frontend Product — generic (concept + checklist)
 
 - `web-performance` - web app performance, Core Web Vitals, loading speed, rendering, asset delivery, code splitting, caching, and image optimization.
 - `web-i18n` - internationalized web UIs, locale-aware formatting, language tags, directionality, RTL layouts, pluralization, and translatable copy.
@@ -55,6 +59,19 @@ This repository bundles Codex skills for building professional web applications.
 - `web-content` - content-heavy pages, CMS integrations, editorial workflows, empty states, error pages, marketing pages, rich text rendering, and content safety.
 - `web-pwa` - installability, service workers, offline support, background sync, push notifications, and app manifest configuration.
 - `web-security` - frontend security concerns, XSS prevention, safe rendering, CSP, CSRF awareness, token handling, secure storage, and secure links/forms.
+
+### Frontend Product — framework-specific variants
+
+Each generic `web-*` skill has framework-specific variants with implementation patterns for React, Preact, and Vue:
+
+| Concept | react-* | preact-* | vue-* |
+|---|---|---|---|
+| Forms | `react-forms` | `preact-forms` | `vue-forms` |
+| Observability | `react-observability` | `preact-observability` | `vue-observability` |
+| Data fetching | `react-data-fetching` | `preact-data-fetching` | `vue-data-fetching` |
+| Content rendering | `react-content` | `preact-content` | `vue-content` |
+| Privacy / consent | `react-privacy` | `preact-privacy` | `vue-privacy` |
+| SEO metadata | `react-seo-metadata` | `preact-seo-metadata` | `vue-seo-metadata` |
 
 ### Platform
 
@@ -345,9 +362,11 @@ Set `WEB_UI_SKILLS_TOOLS_CONFIG` to point at an explicit config path. Use `--lis
 
 - `web-accessibility-standards` covers implementation work.
 - `a11y-review` covers audits and QA.
-- `preact-ui`, `vue-ui`, `vue-router`, `scss-system`, and `storybook-ui` cover component architecture, routing, styling, and UI documentation.
-- `web-performance`, `web-i18n`, `web-testing`, `web-security`, `web-seo-metadata`, `web-forms`, `web-data-fetching`, `web-observability`, and `web-deployment` cover production frontend concerns.
-- `web-auth-ux`, `web-privacy`, `web-content`, `web-pwa`, and `web-design-review` cover specialized product and compliance workflows.
+- `react-a11y`, `preact-a11y`, and `vue-a11y` are framework-specific accessibility skills.
+- `react-ui`, `preact-ui`, `vue-ui`, `vue-router`, `scss-system`, and `storybook-ui` cover component architecture, routing, styling, and UI documentation.
+- `web-performance`, `web-i18n`, `web-testing`, `web-security`, `web-deployment` cover generic production frontend concerns.
+- `web-seo-metadata`, `web-forms`, `web-data-fetching`, `web-observability`, `web-privacy`, `web-content` have framework-specific variants (`react-*`, `preact-*`, `vue-*`).
+- `web-auth-ux`, `web-pwa`, and `web-design-review` cover specialized product and compliance workflows.
 - `netlify-serverless`, the Netlify API skills, `mongodb-netlify`, and `neon-netlify` cover backend, database, and operational concerns.
 
 ## Contributing

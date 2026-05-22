@@ -3,9 +3,9 @@ name: web-forms
 description: Use when building or reviewing web forms, including accessible labels, validation, error messaging, pending and success states, async submit flows, spam resistance, and form tests.
 ---
 
-# Web Forms Skill
+# Web Forms Skill (generic)
 
-Use this skill when a page collects user input through forms, filters, account flows, checkout steps, or multi-step wizards.
+Use this skill when a page collects user input through forms. For framework-specific implementation patterns, use `react-forms`, `preact-forms`, or `vue-forms`.
 
 ## Core goals
 
@@ -46,21 +46,3 @@ Use this skill when a page collects user input through forms, filters, account f
 - Browser autofill and password manager behavior.
 - Slow network, duplicate submit, and expired session behavior.
 - Mobile keyboard type, input mode, and zoom behavior.
-
-## Reference files
-
-### [`references/accessible-fields.md`](references/accessible-fields.md)
-**Accessible HTML field patterns** — Field anatomy with `aria-describedby`, `role="alert"` error containers, correct `autocomplete` values table, required field indication, select/textarea, checkbox/radio fieldsets, show/hide password toggle, mobile `inputmode` values. Use as the HTML baseline for any new form field.
-
-### [`references/submit-state.md`](references/submit-state.md)
-**Async submit state machine** — `SubmitState` discriminated union, Preact signal-based submit handler, duplicate-submit guard, submit button with `aria-busy`, global status message with `role="alert"/"status"`, field-level server error injection, `focusFirstError` implementation, multi-step wizard state shape.
-
-### [`references/validation.md`](references/validation.md)
-**Validation patterns** — Shared Zod schema definition, client-side validate-on-submit (`safeParse` → `fieldErrors`), matching server-side handler in Netlify Functions, validate-on-blur for long forms, async uniqueness validation, display rules, and anti-patterns table.
-
-## External references
-
-- [W3C Forms Tutorial](https://www.w3.org/WAI/tutorials/forms/)
-- [WCAG 2.2: Input Assistance](https://www.w3.org/TR/WCAG22/#input-assistance)
-- [MDN: The form element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-- [MDN: autocomplete](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete)

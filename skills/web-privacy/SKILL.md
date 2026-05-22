@@ -3,9 +3,9 @@ name: web-privacy
 description: Use when implementing or reviewing consent management, cookie banners, analytics opt-in/out, tracking controls, data minimization, privacy-safe telemetry, and compliance-aware frontend patterns.
 ---
 
-# Web Privacy Skill
+# Web Privacy Skill (generic)
 
-Use this skill when a web app collects, stores, or transmits user data, uses analytics or tracking scripts, or must comply with privacy regulations such as GDPR or CCPA.
+Use this skill when a web app collects, stores, or transmits user data. For framework-specific implementation patterns, use `react-privacy`, `preact-privacy`, or `vue-privacy`.
 
 ## Core goals
 
@@ -28,17 +28,6 @@ Use this skill when a web app collects, stores, or transmits user data, uses ana
 - [ ] Forms do not send sensitive data in GET parameters.
 - [ ] Privacy policy URL is linked from the consent banner and any form that collects personal data.
 
-## Reference files
-
-### [`references/consent.md`](references/consent.md)
-**Consent management** — `ConsentState` typed with `version` for re-consent on policy changes, `getConsent`/`setConsent`/`revokeConsent` with `localStorage`, `shouldShowConsentBanner()` version check, Preact `<ConsentBanner>` with equal reject/accept prominence, `<ConsentPreferences>` granular checkboxes, functional-cookie exclusion pattern.
-
-### [`references/script-loading.md`](references/script-loading.md)
-**Conditional script loading** — `loadAnalytics`/`unloadAnalytics` with script injection and cookie clearing, page-load initialization order, CSP `script-src` allowlist in `netlify.toml`, privacy-first Plausible alternative, PostHog with `persistence: "memory"` and `autocapture: false`. Use when tracking scripts must be loaded only after consent.
-
-### [`references/data-handling.md`](references/data-handling.md)
-**Safe data patterns** — `stripParamsFromUrl()` with `history.replaceState` to remove tokens and emails from URLs, `redactForLog()` with nested object support, storage safety guide (what belongs where), server-side `anonymizeId()` hashing pattern, Vite `sourcemap: "hidden"` + post-build `.map` deletion for source map access control.
-
 ## Testing focus
 
 - Tracking scripts do not fire before consent is given.
@@ -47,10 +36,3 @@ Use this skill when a web app collects, stores, or transmits user data, uses ana
 - PII is not present in URLs, logs, or `localStorage` after the relevant flow.
 - Cookie banner does not block keyboard or screen reader access.
 - Consent is re-checked correctly on return visits.
-
-## References
-
-- [GDPR: Consent requirements](https://gdpr.eu/gdpr-consent-requirements/)
-- [MDN: Cookie API](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
-- [web.dev: Privacy sandbox](https://developer.chrome.com/docs/privacy-sandbox/)
-- [OWASP: Sensitive Data Exposure](https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure)
