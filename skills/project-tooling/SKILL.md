@@ -13,6 +13,8 @@ Use this skill when configuring or modifying project tooling: build tools, linte
 - Run `install` after changing dependencies.
 - Use `--save-exact` or `^` ranges consistently per project convention.
 - Keep `package-lock.json` / `pnpm-lock.yaml` in version control.
+- Do not mix package managers in the same repository unless the repo explicitly supports it.
+- Keep workspace/package manager behavior documented if the repo is a monorepo.
 
 ## Linting and formatting
 
@@ -20,6 +22,7 @@ Use this skill when configuring or modifying project tooling: build tools, linte
 - Linting and formatting are often combined into a single check command.
 - Type-checking is typically separate (e.g., `tsc --noEmit`).
 - Configure lint/format/type-check commands in `package.json` scripts for CI.
+- Keep rule/tool selection aligned with the repo's actual source tree, not a template preset.
 
 ## Path aliases
 
@@ -28,6 +31,7 @@ Use this skill when configuring or modifying project tooling: build tools, linte
   - `tsconfig.json` (compilerOptions.paths)
   - Vitest config (if separate from vite config)
   - Any ESLint import resolver
+- Keep alias names short, stable, and reused consistently in imports and tests.
 
 ## Vitest / test config
 
@@ -35,6 +39,8 @@ Use this skill when configuring or modifying project tooling: build tools, linte
 - Common environment: `jsdom` for DOM tests, `node` for Node tests.
 - Setup files run before each test file — use for global mocks (matchMedia, ResizeObserver).
 - Coverage config: provider (`v8` or `istanbul`), reporter (`text`, `lcov`, `html`), thresholds.
+- Prefer one source of truth for test aliases and environment setup.
+- If setup files stub globals (matchMedia, ResizeObserver), keep them minimal and idempotent.
 
 ```ts
 // vitest.config.ts
@@ -80,3 +86,4 @@ export default mergeConfig(viteConfig, defineConfig({
 - Path alias not resolving → check both `vite.config.ts` and `tsconfig.json` `paths`.
 - Test can't find DOM APIs → ensure `environment: 'jsdom'` is set in vitest config.
 - Coverage too low → adjust `include`/`exclude` patterns, check thresholds.
+- A script works in CI but not locally → compare Node version, package manager, and environment variables.

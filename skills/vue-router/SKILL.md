@@ -9,8 +9,8 @@ Use this skill for Vue Router work in Vue 3 applications.
 
 ## Repo Fit
 
-- Keep route-level UI in `src/frontend/pages/`.
-- Import pages through the page barrel where that is the established surface.
+- Keep route-level UI in the project's established pages directory.
+- Import pages through the project's preferred public surface when there is one.
 - Keep route names stable; tests and navigation should resolve by name where possible.
 - Use `RouterLink` for internal navigation instead of plain anchors.
 - Keep one `RouterView` in the app shell unless a layout change requires nested route views.
@@ -18,7 +18,7 @@ Use this skill for Vue Router work in Vue 3 applications.
 
 ## Route Design
 
-- Add routes in `src/frontend/router/index.ts`.
+- Add routes in the project's router entry file.
 - Give every user-facing route a stable `name`.
 - Keep paths short, readable, lowercase, and URL-safe.
 - Use route meta for cross-cutting facts such as title, auth requirements, layout, or feature flags.
@@ -65,4 +65,4 @@ const ExperiencePage = () => import('@/pages/ExperiencePage.vue')
 - Assert path resolution with `router.resolve({ name }).path`.
 - For guards, test allow, cancel, and redirect cases.
 - For component tests, use a fresh router instance with memory history when isolation matters.
-- Run `npm test -- --run src/frontend/router` after router changes.
+- Run the project's targeted router test command after route changes.

@@ -9,17 +9,17 @@ Use this skill for Vue 3 + Vite projects that test with Vitest and Vue Test Util
 
 ## Repo Fit
 
-- Follow the repository test policy: cover all `.ts` files with unit tests.
-- Test `.vue` files when they contain logic, state, conditional rendering, emitted events, lifecycle behavior, async work, or user interaction.
-- For presentational `.vue` files, prefer stable render snapshots or browser visual checks over brittle unit tests.
+- Follow the repository test policy: cover source files with unit tests where the project expects it.
+- Test Vue SFCs when they contain logic, state, conditional rendering, emitted events, lifecycle behavior, async work, or user interaction.
+- For presentational Vue files, prefer stable render snapshots or browser visual checks over brittle unit tests.
 - Keep tests near the code under test and use the existing `*.test.ts` naming convention.
-- Preserve frontend data flow boundaries: `service -> state -> vue`.
+- Preserve the project's data flow boundaries (for example `service -> state -> view`).
 
 ## Test Strategy
 
 - Test public behavior, rendered output, emitted events, state transitions, API envelopes, and route resolution.
 - Avoid asserting private implementation details such as internal helper names, reactive ref names, class ordering, or exact DOM shape unless the DOM contract is the behavior.
-- Prefer focused unit tests for `src/shared`, `src/server`, `src/frontend/services`, and `src/frontend/state`.
+- Prefer focused unit tests for shared modules, server modules, services, and state modules.
 - Use component tests for Vue interaction and conditional rendering, not for duplicating service or state unit tests.
 - Add regression tests when fixing a bug, especially for API status codes, error codes, env parsing, theme state, and route names.
 

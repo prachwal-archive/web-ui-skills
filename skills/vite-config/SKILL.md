@@ -12,6 +12,8 @@ Use this skill for Vite configuration work, regardless of the frontend framework
 - Source root and build output (`outDir`) are defined in `vite.config.ts`.
 - The appropriate framework plugin is used: `@vitejs/plugin-react`, `@vitejs/plugin-vue`, `@preact/preset-vite`, etc.
 - Path aliases in `vite.config.ts` must match `tsconfig.json` `compilerOptions.paths`.
+- Keep the config small and declarative; if a helper grows, extract it into a local function.
+- Prefer defaults unless the repo has a concrete reason to override them.
 
 ## Common config patterns
 
@@ -46,6 +48,12 @@ plugins: [
   checker({ typescript: true }),  // type-check in dev
 ]
 ```
+
+### Dev server and preview
+
+- Use `server.proxy` for local backend/API calls.
+- Use `preview.port` only if the deployment preview workflow needs it.
+- Keep `base` aligned with the deployed subpath if the app is not served from `/`.
 
 ## Env Rules
 
@@ -83,12 +91,16 @@ server: {
 - Keep `build.emptyOutDir` intentional when `outDir` is outside the project root.
 - Static assets that need no transform go in `public/`; imported assets are transformed by Vite.
 - Code-split with `build.rollupOptions.output.manualChunks` for large dependencies.
+- Treat `build.sourcemap` as a deployment decision, not a default.
+- Prefer explicit chunk names when debugging bundle growth.
 
 ## TypeScript
 
 - Update `tsconfig.json` paths when adding or changing aliases.
 - Use the project's type-check command (`tsc -b` or `vue-tsc -b`) as a separate step from the Vite build.
 - Enable `vite.checker` plugin or run type-check in CI, not during dev.
+- If the Vite config references `import.meta.env`, keep typings in sync.
+- If the project uses tests, ensure Vitest config imports the same alias setup as Vite.
 
 ## Verification
 

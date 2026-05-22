@@ -16,6 +16,9 @@ Use this skill when building or reviewing React components, pages, layouts, or d
 - Use `React.memo` sparingly — profile first.
 - Use `React.forwardRef` when a component needs to expose a DOM ref to the parent.
 - Use `React.useId` for generating accessible unique IDs (avoid random keys).
+- Prefer composition over prop flags when a component starts growing into multiple modes.
+- Keep presentational components pure; move data fetching and state orchestration up a level.
+- Derive values in render when they are cheap and deterministic; do not store derived state.
 
 ## Hooks patterns
 
@@ -35,11 +38,18 @@ type FormAction =
 function formReducer(state: FormState, action: FormAction): FormState { … }
 ```
 
+## Common component patterns
+
+- Container/page component: fetch data, map it into props, and handle loading/error branches.
+- Presentational component: accept data via props and render with no side effects.
+- Form component: own local state, validation, and submit wiring.
+- Layout component: compose header/sidebar/footer and keep route content via `children` or `Outlet`.
+
 ## State management
 
 - Use `useState` for local component state.
 - Use `useReducer` for complex state logic (multi-field forms, wizards).
-- For global state, follow the project's chosen library: Redux Toolkit (RTK Query), Zustand, Jotai, or Context.
+- For global state, follow the project's chosen library: Redux Toolkit, Zustand, Jotai, Context, or the app's existing store pattern.
 - Prefer lifting state up over adding global state.
 - Use `useEffect` only for synchronization with external systems — not for derived state.
 - Use `useMemo` / `useCallback` only when profiling shows a bottleneck.
@@ -56,6 +66,7 @@ function formReducer(state: FormState, action: FormAction): FormState { … }
 - Follow the project's styling approach: CSS Modules, Tailwind, SCSS, CSS-in-JS, or UI library (Ant Design, MUI, etc.).
 - Keep styling consistent with the project's design system.
 - Use `className` with the project's naming convention.
+- Prefer semantic layout primitives (`main`, `section`, `header`, `nav`, `aside`, `footer`) before absolute positioning.
 - For CSS-in-JS, prefer runtime-free solutions (vanilla-extract, Panda CSS) over runtime ones.
 
 ## Routing
@@ -73,6 +84,8 @@ function formReducer(state: FormState, action: FormAction): FormState { … }
 - Test loading, error, empty, and success states.
 - Prefer `screen.getByRole` and `screen.getByLabelText` over test IDs.
 - Use `userEvent` over `fireEvent` for more realistic interaction simulation.
+- Assert visible outcomes, not implementation details or internal state.
+- For complex UI branches, test the smallest component that owns the branch.
 
 ## Accessibility
 
