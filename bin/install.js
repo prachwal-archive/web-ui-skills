@@ -13,63 +13,100 @@ const runtime = {
 const SKILL_FILE = 'SKILL.md';
 const GROUPS_FILE = 'groups.json';
 const USER_SKILLS_HOME = '.web-ui-skills';
-const TOOL_FOLDER_NAMES = {
-  codex: '.codex',
-  claude: '.claude',
-  copilot: '.copilot',
-  kilo: '.kilocode',
-};
 
-function resolveGlobalToolDir(toolName) {
-  const homeOverrides = {
-    codex: process.env.CODEX_HOME,
-    claude: process.env.CLAUDE_HOME,
-    copilot: process.env.COPILOT_HOME,
-    kilo: process.env.KILOCODE_HOME,
-  };
+const AGENT_TOOLS_CONFIG = path.join(__dirname, '..', 'config', 'agent-tools.json');
 
-  const defaults = {
-    codex: path.join(os.homedir(), '.codex'),
-    claude: path.join(os.homedir(), '.claude'),
-    copilot: path.join(os.homedir(), '.copilot'),
-    kilo: path.join(os.homedir(), '.kilocode'),
-  };
+let _registry = null;
 
-  return path.join(homeOverrides[toolName] || defaults[toolName], 'skills');
+function loadToolRegistry() {
+  if (_registry) return _registry;
+
+  const bundled = JSON.parse(fs.readFileSync(AGENT_TOOLS_CONFIG, 'utf8'));
+
+  const sources = [{ data: bundled }];
+
+  const userConfig = path.join(os.homedir(), USER_SKILLS_HOME, 'agent-tools.json');
+  if (fs.existsSync(userConfig)) {
+    sources.push({ data: JSON.parse(fs.readFileSync(userConfig, 'utf8')) });
+  }
+
+  const projectConfig = path.join(process.cwd(), USER_SKILLS_HOME, 'agent-tools.json');
+  if (fs.existsSync(projectConfig)) {
+    sources.push({ data: JSON.parse(fs.readFileSync(projectConfig, 'utf8')) });
+  }
+
+  const envPath = process.env.WEB_UI_SKILLS_TOOLS_CONFIG;
+  if (envPath) {
+    sources.push({ data: JSON.parse(fs.readFileSync(path.resolve(envPath), 'utf8')) });
+  }
+
+  const merged = {};
+  for (const { data } of sources) {
+    for (const [id, entry] of Object.entries(data)) {
+      merged[id] = { ...merged[id], ...entry, id: entry.id || merged[id]?.id || id };
+    }
+  }
+
+  const aliasToId = {};
+  for (const [, entry] of Object.entries(merged)) {
+    if (entry.enabled === false) continue;
+    for (const alias of entry.aliases || []) {
+      aliasToId[alias] = entry.id;
+    }
+  }
+
+  _registry = { tools: merged, aliasToId };
+  return _registry;
 }
 
-function resolveProjectToolDir(toolName, projectRoot = process.cwd()) {
-  return path.join(projectRoot, TOOL_FOLDER_NAMES[toolName], 'skills');
+function invalidateToolRegistry() {
+  _registry = null;
+}
+
+function resolveGlobalToolDir(toolId) {
+  const { tools } = loadToolRegistry();
+  const entry = tools[toolId];
+  if (!entry) return null;
+  const env = entry.global?.env;
+  const envHome = env ? process.env[env] : null;
+  const defaultHome = entry.global?.defaultHome?.replace(/^~/, os.homedir());
+  const skillsPath = entry.global?.skillsPath || 'skills';
+  return path.join(envHome || defaultHome, skillsPath);
+}
+
+function resolveProjectToolDir(toolId, projectRoot = process.cwd()) {
+  const { tools } = loadToolRegistry();
+  const entry = tools[toolId];
+  if (!entry) return null;
+  const folder = entry.project?.folder;
+  if (!folder) return null;
+  const skillsPath = entry.project?.skillsPath || 'skills';
+  return path.join(projectRoot, folder, skillsPath);
 }
 
 function resolveToolDirs({ project = false, projectRoot = process.cwd() } = {}) {
-  if (project) {
-    return {
-      codex: resolveProjectToolDir('codex', projectRoot),
-      claude: resolveProjectToolDir('claude', projectRoot),
-      copilot: resolveProjectToolDir('copilot', projectRoot),
-      kilo: resolveProjectToolDir('kilo', projectRoot),
-    };
+  const { tools } = loadToolRegistry();
+  const result = {};
+  for (const [id, entry] of Object.entries(tools)) {
+    if (entry.enabled === false) continue;
+    result[id] = project
+      ? resolveProjectToolDir(id, projectRoot)
+      : resolveGlobalToolDir(id);
   }
-
-  return {
-    codex: resolveGlobalToolDir('codex'),
-    claude: resolveGlobalToolDir('claude'),
-    copilot: resolveGlobalToolDir('copilot'),
-    kilo: resolveGlobalToolDir('kilo'),
-  };
+  return result;
 }
 
 function resolveToolDir(toolName) {
-  return resolveToolDirs()[toolName];
+  const { aliasToId, tools } = loadToolRegistry();
+  const id = aliasToId[toolName] || toolName;
+  const entry = tools[id];
+  if (!entry || entry.enabled === false) return null;
+  return resolveGlobalToolDir(id);
 }
 
-const TOOLS = {
-  codex: resolveToolDir('codex'),
-  claude: resolveToolDir('claude'),
-  copilot: resolveToolDir('copilot'),
-  kilo: resolveToolDir('kilo'),
-};
+function TOOLS() {
+  return resolveToolDirs();
+}
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
@@ -92,6 +129,7 @@ function setCached(key, value, ttl = CACHE_TTL) {
 }
 
 function invalidateCache(pattern = null) {
+  invalidateToolRegistry();
   if (!pattern) {
     cache.clear();
     return;
@@ -121,7 +159,7 @@ const ALLOWED_RM_PREFIXES = new Set();
 
 function refreshAllowedRmPrefixes() {
   ALLOWED_RM_PREFIXES.clear();
-  for (const dir of Object.values(TOOLS)) ALLOWED_RM_PREFIXES.add(dir);
+  for (const dir of Object.values(TOOLS())) ALLOWED_RM_PREFIXES.add(dir);
   ALLOWED_RM_PREFIXES.add(getUserSkillsSource());
   ALLOWED_RM_PREFIXES.add(getProjectSkillsSource());
   ALLOWED_RM_PREFIXES.add(os.tmpdir());
@@ -703,10 +741,11 @@ function installForTool(
   toolName,
   selectedSkills = null,
   selectedGroups = null,
-  targetDirs = TOOLS,
+  targetDirs,
   skillsSource = getSkillsSources(),
 ) {
-  const targetDir = targetDirs[toolName];
+  const dirs = targetDirs || TOOLS();
+  const targetDir = dirs[toolName];
 
   if (!fs.existsSync(getSkillsSource())) {
     console.error(`✗ Skills source directory not found: ${getSkillsSource()}`);
@@ -756,10 +795,11 @@ function deleteForTool(
   selectedSkills,
   selectedGroups = null,
   skillsSource = getSkillsSources(),
-  targetDirs = TOOLS,
+  targetDirs,
   deleteAll = false,
 ) {
-  const targetDir = targetDirs[toolName];
+  const dirs = targetDirs || TOOLS();
+  const targetDir = dirs[toolName];
   const skills = getTopLevelSkills(skillsSource);
   const skillsToDelete = resolveRequestedSkills(skills, selectedSkills, selectedGroups, skillsSource);
 
@@ -927,9 +967,47 @@ function parseArgs(argv) {
       if (state.search) i += 1;
     } else if (arg.startsWith('--search=')) {
       state.search = arg.slice('--search='.length);
+    } else if (arg === '--list-tools') {
+      const { tools } = loadToolRegistry();
+      console.log('\nEnabled tools:\n');
+      for (const [id, entry] of Object.entries(tools)) {
+        if (entry.enabled === false) continue;
+        console.log(`  • ${id}${entry.displayName ? ` (${entry.displayName})` : ''}`);
+      }
+      console.log();
+      return state;
+    } else if (arg === '--tool') {
+      const next = argv[i + 1];
+      if (next && !next.startsWith('--')) {
+        const { aliasToId } = loadToolRegistry();
+        const resolved = aliasToId[next] || next;
+        state.requestedTools.push(resolved);
+        i += 1;
+      }
+    } else if (arg === '--tools' || arg === '--tool=') {
+      const next = argv[i + 1];
+      if (next && !next.startsWith('--')) {
+        const { aliasToId } = loadToolRegistry();
+        for (const name of next.split(',')) {
+          const t = name.trim();
+          if (t) state.requestedTools.push(aliasToId[t] || t);
+        }
+        i += 1;
+      }
+    } else if (arg.startsWith('--tool=')) {
+      const { aliasToId } = loadToolRegistry();
+      const resolved = aliasToId[arg.slice('--tool='.length)] || arg.slice('--tool='.length);
+      state.requestedTools.push(resolved);
+    } else if (arg.startsWith('--tools=')) {
+      const { aliasToId } = loadToolRegistry();
+      for (const name of arg.slice('--tools='.length).split(',')) {
+        const t = name.trim();
+        if (t) state.requestedTools.push(aliasToId[t] || t);
+      }
     } else if (arg.startsWith('--')) {
       const tool = arg.slice(2);
-      if (Object.prototype.hasOwnProperty.call(TOOLS, tool)) {
+      const { tools } = loadToolRegistry();
+      if (Object.prototype.hasOwnProperty.call(tools, tool)) {
         state.requestedTools.push(tool);
       } else {
         state.unknownOptions.push(arg);
@@ -951,17 +1029,20 @@ function printHelp() {
 Usage: npx web-ui-skills [command] [options]
 
 Options:
-  --all        Install for all supported tools (default when no tool flag is given)
-  --project    Install into project-local .codex/.claude/.copilot/.kilocode folders
-  --project-root DIR  Set the project root used with --project
-  --codex      Install to ~/.codex/skills
-  --claude     Install to ~/.claude/skills
-  --copilot    Install to ~/.copilot/skills
-  --kilo       Install to ~/.kilocode/skills
-  --list       List available skills and exit
-  --group NAME Install one or more predefined groups
-  --groups     List available groups and exit
-  --search Q   Search available skills by folder or skill name
+  --all              Install for all supported tools (default when no tool flag is given)
+  --project          Install into project-local tool folders
+  --project-root DIR Set the project root used with --project
+  --codex            Install to Codex skills directory
+  --claude           Install to Claude skills directory
+  --copilot          Install to Copilot skills directory
+  --kilo             Install to Kilo skills directory
+  --tool ID          Install to a specific tool by registry id or alias
+  --tools CSV        Install to comma-separated list of tools (e.g. codex,kilo,opencode)
+  --list-tools       List enabled tools from the registry
+  --list             List available skills and exit
+  --group NAME       Install one or more predefined groups
+  --groups           List available groups and exit
+  --search Q         Search available skills by folder or skill name
   --delete     Remove selected skills from the target tool directory
   --everything Remove every installed skill from the selected tool directories
   -h, --help   Show this help message
@@ -982,17 +1063,20 @@ Commands:
   delete       Alias for remove
 
 Examples:
-  npx web-ui-skills                 # install for all tools
-  npx web-ui-skills --codex         # install only for Codex
-  npx web-ui-skills --claude        # install only for Claude Code
-  npx web-ui-skills --codex --kilo  # install for Codex and Kilo
+  npx web-ui-skills                          # install for all tools
+  npx web-ui-skills --codex                  # install only for Codex
+  npx web-ui-skills --claude                 # install only for Claude Code
+  npx web-ui-skills --codex --kilo           # install for Codex and Kilo
+  npx web-ui-skills --tool opencode          # install for OpenCode
+  npx web-ui-skills --tools codex,kilo,opencode # install for multiple tools
+  npx web-ui-skills --list-tools             # list enabled tools from registry
   npx web-ui-skills --project --codex preact-ui   # install into ./.codex/skills
-  npx web-ui-skills preact-ui vue-ui # install only selected skills
-  npx web-ui-skills group ui         # install a predefined group
-  npx web-ui-skills --group ui       # install a group via flag
-  npx web-ui-skills groups           # list predefined groups
-  npx web-ui-skills find ui          # search matching skills
-  npx web-ui-skills mcp              # start the local MCP server
+  npx web-ui-skills preact-ui vue-ui         # install only selected skills
+  npx web-ui-skills group ui                 # install a predefined group
+  npx web-ui-skills --group ui               # install a group via flag
+  npx web-ui-skills groups                   # list predefined groups
+  npx web-ui-skills find ui                  # search matching skills
+  npx web-ui-skills mcp                      # start the local MCP server
   npx web-ui-skills --codex remove vue-ui    # remove a skill from a specific tool dir
   npx web-ui-skills remove --all vue-ui      # remove a skill from all tool dirs
   npx web-ui-skills remove --all --everything # remove all installed skills from all tool dirs
@@ -1039,7 +1123,7 @@ function runCli(argv = process.argv.slice(2)) {
 
   const targetDirs = parsed.project
     ? resolveToolDirs({ project: true, projectRoot: parsed.projectRoot || process.cwd() })
-    : TOOLS;
+    : TOOLS();
 
   if (parsed.command === 'list' || parsed.list) {
     const { skills, warnings } = validateSkillTree(skillSources);
@@ -1055,7 +1139,7 @@ function runCli(argv = process.argv.slice(2)) {
   }
 
   const targetTools =
-    parsed.requestedTools.length > 0 ? parsed.requestedTools : Object.keys(TOOLS);
+    parsed.requestedTools.length > 0 ? parsed.requestedTools : Object.keys(TOOLS());
 
   if (parsed.command === 'remove') {
     parsed.deleteMode = true;
@@ -1095,6 +1179,8 @@ if (require.main === module) {
 
 module.exports = {
   TOOLS,
+  loadToolRegistry,
+  invalidateToolRegistry,
   copyDir,
   deleteForTool,
   expandSelectedGroups,

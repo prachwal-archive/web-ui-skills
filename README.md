@@ -81,27 +81,28 @@ npx web-ui-skills
 Or target specific tools:
 
 ```bash
-npx web-ui-skills --codex      # ~/.codex/skills
-npx web-ui-skills --claude     # ~/.claude/skills
-npx web-ui-skills --copilot    # ~/.copilot/skills
-npx web-ui-skills --kilo       # ~/.kilocode/skills
-
-npx web-ui-skills --codex --claude   # multiple tools at once
+npx web-ui-skills --codex      # Codex (~/.codex/skills)
+npx web-ui-skills --claude     # Claude (~/.claude/skills)
+npx web-ui-skills --copilot    # Copilot (~/.copilot/skills)
+npx web-ui-skills --kilo       # Kilo (~/.kilocode/skills)
+npx web-ui-skills --tool opencode # OpenCode (~/.opencode/skills)
+npx web-ui-skills --tools codex,kilo,opencode   # multiple tools at once
 npx web-ui-skills --project --codex preact-ui   # ./.codex/skills in the current project
 ```
 
 Additional options:
 
 ```bash
-npx web-ui-skills list   # show detected skills and structural warnings
-npx web-ui-skills groups   # list predefined skill groups
-npx web-ui-skills find ui   # search skills by folder or frontmatter name
+npx web-ui-skills list          # show detected skills and structural warnings
+npx web-ui-skills groups        # list predefined skill groups
+npx web-ui-skills find ui       # search skills by folder or frontmatter name
+npx web-ui-skills --list-tools  # list enabled tools from the registry
 npx web-ui-skills preact-ui vue-ui   # install only selected skills
-npx web-ui-skills group ui   # install a predefined group of skills
+npx web-ui-skills group ui      # install a predefined group of skills
 npx web-ui-skills remove vue-ui    # remove selected skills from the target tool dir
 npx web-ui-skills remove --all vue-ui    # remove vue-ui from all tool dirs
 npx web-ui-skills remove --all --everything # remove all installed skills from all tool dirs
-npx web-ui-skills --help   # show help
+npx web-ui-skills --help        # show help
 ```
 
 ### Local skill overlay
@@ -316,6 +317,29 @@ CODEX_HOME=/tmp/web-ui-skills-test-home node bin/install.js --codex remove vue-u
 ```
 
 Run `npx web-ui-skills --list` to inspect the bundle without installing anything.
+
+## Supported Agent CLIs
+
+Skills are installed per agent CLI via the tool registry (`config/agent-tools.json`):
+
+| Tool | Registry ID | Global dir | Project folder | Adapter |
+|---|---|---|---|---|
+| Codex | `codex` | `~/.codex/skills` | `.codex/skills` | directory-skills |
+| Claude | `claude` | `~/.claude/skills` | `.claude/skills` | directory-skills |
+| Copilot | `copilot` | `~/.copilot/skills` | `.copilot/skills` | directory-skills |
+| Kilo | `kilo` | `~/.kilocode/skills` | `.kilocode/skills` | directory-skills |
+| OpenCode | `opencode` | `~/.opencode/skills` | `.opencode/skills` | directory-skills |
+
+Kilo and OpenCode use the same adapter model: skills are copied into a tool home or project-local folder.
+
+To add a new directory-based agent CLI, create a user or project `agent-tools.json` override:
+
+```bash
+# ~/.web-ui-skills/agent-tools.json or ./.web-ui-skills/agent-tools.json
+echo '{"my-tool": {"id": "my-tool", "displayName": "My Tool", "aliases": ["mytool"], "adapter": "directory-skills", "global": {"env": "MY_TOOL_HOME", "defaultHome": "~/.my-tool", "skillsPath": "skills"}, "project": {"folder": ".my-tool", "skillsPath": "skills"}}}' > ~/.web-ui-skills/agent-tools.json
+```
+
+Set `WEB_UI_SKILLS_TOOLS_CONFIG` to point at an explicit config path. Use `--list-tools` to verify what is enabled.
 
 ## Notes
 

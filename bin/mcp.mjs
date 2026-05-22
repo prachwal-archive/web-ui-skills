@@ -14,9 +14,12 @@ const require = createRequire(import.meta.url);
 const installer = require('./install.js');
 const { version: packageVersion } = require('../package.json');
 
-const TOOL_NAMES = Object.keys(installer.TOOLS);
-const toolNameSchema = z.enum(TOOL_NAMES);
-const CLIENT_NAMES = ['codex', 'claude', 'copilot', 'kilo'];
+const { tools: _registryTools, aliasToId: _registryAliases } = installer.loadToolRegistry();
+const TOOL_NAMES = Object.keys(_registryTools).filter((id) => _registryTools[id].enabled !== false);
+const TOOL_ALIASES = Object.keys(_registryAliases);
+const ALL_TOOL_IDS = [...new Set([...TOOL_NAMES, ...TOOL_ALIASES])];
+const toolNameSchema = z.enum(ALL_TOOL_IDS);
+const CLIENT_NAMES = TOOL_NAMES;
 
 function textContent(value) {
   return { content: [{ type: 'text', text: value }] };
@@ -152,7 +155,9 @@ function resolveClientName(value) {
   if (!value) return null;
 
   const normalized = String(value).trim().toLowerCase();
-  return CLIENT_NAMES.includes(normalized) ? normalized : null;
+  if (CLIENT_NAMES.includes(normalized)) return normalized;
+  if (_registryAliases[normalized]) return _registryAliases[normalized];
+  return null;
 }
 
 function resolveBooleanEnv(value) {
@@ -400,7 +405,7 @@ function createServer(options = {}) {
             '- Use remove_skills to remove specific skills, groups, or everything from a selected tool scope.',
             `- ${describeClientContext(context)}`,
             '- Group names are defined in skills/groups.json.',
-            '- Tools are: codex, claude, copilot, and kilo.',
+            `- Tools are: ${TOOL_NAMES.join(', ')}.`,
           ].join('\n'),
         },
       ],

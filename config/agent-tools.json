@@ -1,0 +1,77 @@
+{
+  "codex": {
+    "id": "codex",
+    "displayName": "Codex",
+    "aliases": ["codex"],
+    "adapter": "directory-skills",
+    "global": {
+      "env": "CODEX_HOME",
+      "defaultHome": "~/.codex",
+      "skillsPath": "skills"
+    },
+    "project": {
+      "folder": ".codex",
+      "skillsPath": "skills"
+    }
+  },
+  "claude": {
+    "id": "claude",
+    "displayName": "Claude",
+    "aliases": ["claude"],
+    "adapter": "directory-skills",
+    "global": {
+      "env": "CLAUDE_HOME",
+      "defaultHome": "~/.claude",
+      "skillsPath": "skills"
+    },
+    "project": {
+      "folder": ".claude",
+      "skillsPath": "skills"
+    }
+  },
+  "copilot": {
+    "id": "copilot",
+    "displayName": "Copilot",
+    "aliases": ["copilot"],
+    "adapter": "directory-skills",
+    "global": {
+      "env": "COPILOT_HOME",
+      "defaultHome": "~/.copilot",
+      "skillsPath": "skills"
+    },
+    "project": {
+      "folder": ".copilot",
+      "skillsPath": "skills"
+    }
+  },
+  "kilo": {
+    "id": "kilo",
+    "displayName": "Kilo",
+    "aliases": ["kilo", "kilocode"],
+    "adapter": "directory-skills",
+    "global": {
+      "env": "KILOCODE_HOME",
+      "defaultHome": "~/.kilocode",
+      "skillsPath": "skills"
+    },
+    "project": {
+      "folder": ".kilocode",
+      "skillsPath": "skills"
+    }
+  },
+  "opencode": {
+    "id": "opencode",
+    "displayName": "OpenCode",
+    "aliases": ["opencode"],
+    "adapter": "directory-skills",
+    "global": {
+      "env": "OPENCODE_HOME",
+      "defaultHome": "~/.opencode",
+      "skillsPath": "skills"
+    },
+    "project": {
+      "folder": ".opencode",
+      "skillsPath": "skills"
+    }
+  }
+}
