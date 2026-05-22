@@ -700,6 +700,7 @@ describe('removal', () => {
     assert.equal(payload.allSkills, true);
     assert.ok(!fs.existsSync(path.join(projectRoot, '.codex', 'skills', 'preact-ui')));
     assert.ok(!fs.existsSync(path.join(projectRoot, '.codex', 'skills', 'vue-ui')));
+    assert.ok(payload.results[0].removed.length > 0);
   });
 });
 

@@ -17,4 +17,4 @@ Organization rules:
 - Put heavyweight examples, skeletons, and eval tasks in `.github/prompts`.
 - Put Codex task routers in `.agents/skills/*/SKILL.md`.
 - Do not duplicate content across Copilot instructions, prompts, and skills; cross-reference instead.
-- Verify Markdown with `pnpm run lint:md`.
+- Verify Markdown with `npm run lint:md`.

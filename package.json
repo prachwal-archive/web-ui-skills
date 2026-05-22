@@ -19,6 +19,7 @@
   "scripts": {
     "install-skills": "node bin/install.js",
     "list-skills": "node bin/install.js --list",
+    "audit": "npm audit --audit-level moderate",
     "mcp": "node bin/mcp.mjs",
     "test": "node --test",
     "check-md-refs": "node scripts/check-md-refs.js .",
@@ -70,6 +71,6 @@
     "markdownlint-cli": "^0.48.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   }
 }

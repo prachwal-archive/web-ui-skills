@@ -268,8 +268,6 @@ function installOrUpdate({
 
 function removeAllSkillsFromTool(toolName, targetDirs) {
   const targetDir = targetDirs[toolName];
-  const skillsSource = installer.getSkillsSource();
-  const skills = installer.getTopLevelSkills(skillsSource);
   const removed = [];
   const skipped = [];
 
@@ -277,14 +275,18 @@ function removeAllSkillsFromTool(toolName, targetDirs) {
     return { tool: toolName, targetDir, removed, skipped, exists: false };
   }
 
-  for (const skill of skills) {
-    const dest = path.join(targetDir, skill);
-    if (fs.existsSync(dest)) {
-      fs.rmSync(dest, { recursive: true, force: true });
-      removed.push(skill);
-    } else {
-      skipped.push(skill);
-    }
+  const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+  const dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+  const files = entries.filter((e) => !e.isDirectory()).map((e) => e.name);
+
+  for (const entry of dirs) {
+    const fullPath = path.join(targetDir, entry);
+    fs.rmSync(fullPath, { recursive: true, force: true });
+    removed.push(entry);
+  }
+
+  if (removed.length === 0 && files.length === 0) {
+    skipped.push('(empty target directory)');
   }
 
   return { tool: toolName, targetDir, removed, skipped, exists: true };
@@ -672,7 +674,7 @@ function createServer(options = {}) {
     'remove_skills',
     {
       title: 'Remove skills',
-      description: 'Remove one or more skills or groups from selected tools. Use allSkills=true to remove every installed skill from the selected tools. Can target global or project-local installs.',
+      description: 'Remove one or more skills or groups from selected tools. Use allSkills=true to remove every skill directory installed in the selected tool scope (matches CLI remove --all --everything). Can target global or project-local installs.',
       inputSchema: z.object({
         tools: z.array(toolNameSchema).optional(),
         skills: z.array(z.string().min(1)).optional(),

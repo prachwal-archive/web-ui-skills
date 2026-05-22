@@ -11,4 +11,4 @@ applyTo: "**/*.md"
 - Add a language to fenced code blocks; use `text` for plain output.
 - Use compact bullets and keep lines readable.
 - Keep instruction files short; move detailed examples to `.github/prompts`.
-- Run `pnpm run lint:md` after Markdown-heavy edits.
+- Run `npm run lint:md` after Markdown-heavy edits.

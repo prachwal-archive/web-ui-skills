@@ -10,4 +10,4 @@ applyTo: "eslint.config.ts, package.json, src/**/*.{ts,tsx}"
 - Use `@eslint/js` recommended config and `typescript-eslint` recommended config.
 - Before adding a plugin, verify it supports flat config.
 - Keep generated outputs ignored: `dist/`, `coverage/`, `node_modules/`.
-- Run `pnpm run lint` after changing lint config or broad TypeScript rules.
+- Run `npm run lint:md` after changing lint config or broad TypeScript rules.
