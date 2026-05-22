@@ -74,11 +74,11 @@ Files:
 
 Plan:
 
-- [ ] Extend `syncOverlaySources()` with `dryRun` and `overwrite` options.
-- [ ] Make dry-run return destination, source roots, skills, groups, and replace counts without writing files.
-- [ ] Require `overwrite: true` before replacing an existing overlay directory.
-- [ ] Add MCP input schema fields for `dryRun` and `overwrite`.
-- [ ] Update MCP prompt/resource guidance to recommend dry-run before overwrite.
+- [x] Extend `syncOverlaySources()` with `dryRun` and `overwrite` options.
+- [x] Make dry-run return destination, source roots, skills, groups, and replace counts without writing files.
+- [x] Require `overwrite: true` before replacing an existing overlay directory.
+- [x] Add MCP input schema fields for `dryRun` and `overwrite`.
+- [x] Update MCP prompt/resource guidance to recommend dry-run before overwrite.
 - [ ] Update README MCP tool documentation.
 
 Validation:
@@ -86,8 +86,8 @@ Validation:
 - [ ] Test dry-run does not create or delete files.
 - [ ] Test existing destination fails without `overwrite: true`.
 - [ ] Test existing destination succeeds with `overwrite: true`.
-- [ ] `npm test`
-- [ ] `npm run check-md-refs`
+- [x] `npm test` (55/55)
+- [x] `npm run check-md-refs`
 
 Done when:
 
