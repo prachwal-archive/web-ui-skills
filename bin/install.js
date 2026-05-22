@@ -330,16 +330,59 @@ function promoteOverlaySkill({
     };
   }
 
-  fs.rmSync(destinationRoot, { recursive: true, force: true });
-  fs.mkdirSync(path.dirname(destinationRoot), { recursive: true });
-  copyDir(sourceRoot, destinationRoot);
+  const stagingParent = fs.mkdtempSync(path.join(os.tmpdir(), 'web-ui-skills-promote-'));
+  const stagingRoot = path.join(stagingParent, name);
+  let backupRoot;
 
-  return {
-    ok: true,
-    name,
-    sourceRoot,
-    destinationRoot,
-  };
+  try {
+    copyDir(sourceRoot, stagingRoot);
+
+    if (!fs.existsSync(path.join(stagingRoot, SKILL_FILE))) {
+      fs.rmSync(stagingParent, { recursive: true, force: true });
+      return {
+        ok: false,
+        error: 'Staged copy is missing SKILL.md; promotion aborted.',
+        name,
+        sourceRoot,
+        destinationRoot,
+      };
+    }
+
+    backupRoot = destinationRoot + '.bak';
+    if (fs.existsSync(destinationRoot)) {
+      fs.renameSync(destinationRoot, backupRoot);
+    }
+
+    fs.mkdirSync(path.dirname(destinationRoot), { recursive: true });
+    fs.renameSync(stagingRoot, destinationRoot);
+    fs.rmSync(stagingParent, { recursive: true, force: true });
+
+    if (fs.existsSync(backupRoot)) {
+      fs.rmSync(backupRoot, { recursive: true, force: true });
+    }
+
+    return {
+      ok: true,
+      name,
+      sourceRoot,
+      destinationRoot,
+    };
+  } catch (err) {
+    if (backupRoot && fs.existsSync(backupRoot)) {
+      if (fs.existsSync(destinationRoot)) {
+        fs.rmSync(destinationRoot, { recursive: true, force: true });
+      }
+      fs.renameSync(backupRoot, destinationRoot);
+    }
+    fs.rmSync(stagingParent, { recursive: true, force: true });
+    return {
+      ok: false,
+      error: `Promotion failed: ${err.message}`,
+      name,
+      sourceRoot,
+      destinationRoot,
+    };
+  }
 }
 
 function getGroupEntries(skillsSource = getSkillsSources()) {
